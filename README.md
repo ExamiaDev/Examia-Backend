@@ -10,6 +10,40 @@ Backend API para la aplicación Examia - Sistema de corrección automática de e
 - **JWT** para autenticación
 - **Gradle** como build tool
 
+## 📬 Colección de Postman
+
+Incluimos una colección de Postman para facilitar las pruebas de la API.
+
+### Archivos disponibles
+
+```
+postman/
+├── Examia-Backend.postman_collection.json    # Colección con todos los endpoints
+├── Examia-Local.postman_environment.json     # Entorno local (localhost:8080)
+└── Examia-Production.postman_environment.json # Entorno producción (Render)
+```
+
+### Cómo importar en Postman
+
+1. Abrir Postman
+2. Click en **Import** (arriba a la izquierda)
+3. Arrastrar los 3 archivos JSON de la carpeta `postman/`
+4. Seleccionar el entorno deseado (Local o Production) en el dropdown de arriba a la derecha
+
+### Características de la colección
+
+- ✅ **Variables de entorno**: Cambiá fácilmente entre Local y Producción
+- ✅ **Token automático**: Después de login/register, el token se guarda automáticamente
+- ✅ **Ejemplos de respuesta**: Cada endpoint tiene ejemplos de respuestas exitosas y errores
+- ✅ **Documentación inline**: Descripción de cada endpoint y sus parámetros
+
+### Entornos disponibles
+
+| Entorno | URL |
+|---------|-----|
+| **Local** | `http://localhost:8080` |
+| **Production** | `https://examia-backend-tzwg.onrender.com` |
+
 ## Requisitos Previos
 
 - Java 17 o superior
@@ -419,6 +453,45 @@ src/main/java/com/examia/
 - [ ] Integrar API de Gemini 2.5 para corrección automática
 - [ ] Implementar sistema de calificaciones
 - [ ] Agregar tests unitarios e integración
+
+## 📋 Buenas Prácticas para el Equipo
+
+### Al agregar nuevos endpoints
+
+Cada vez que se agregue un nuevo endpoint a la API, se debe:
+
+1. **Actualizar la colección de Postman**
+   - Agregar el nuevo endpoint en `postman/Examia-Backend.postman_collection.json`
+   - Incluir ejemplos de request y response
+   - Documentar los posibles códigos de error
+   
+2. **Probar en ambos entornos**
+   - Verificar que funcione en Local
+   - Verificar que funcione en Production (después del deploy)
+
+3. **Documentar en el README** (si es necesario)
+   - Agregar el endpoint en la sección "Endpoints de la API"
+   - Documentar parámetros y respuestas esperadas
+
+### Convenciones de código
+
+- **Commits**: Usar [Conventional Commits](https://www.conventionalcommits.org/)
+  - `feat:` nueva funcionalidad
+  - `fix:` corrección de bugs
+  - `docs:` cambios en documentación
+  - `refactor:` refactorización de código
+  
+- **Branches**: 
+  - `main` - rama de producción (auto-deploy a Render)
+  - `develop` - rama de desarrollo
+  - `feature/nombre` - nuevas funcionalidades
+  - `fix/nombre` - correcciones
+
+### Variables de entorno
+
+Nunca commitear credenciales. Usar:
+- `application-local.yml` para desarrollo (está en `.gitignore`)
+- Variables de entorno en Render para producción
 
 ## Licencia
 

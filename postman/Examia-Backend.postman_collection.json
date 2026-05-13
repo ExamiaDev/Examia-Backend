@@ -1,0 +1,331 @@
+{
+	"info": {
+		"_postman_id": "examia-backend-collection",
+		"name": "Examia Backend API",
+		"description": "Colección de endpoints para la API de Examia Backend.\n\n## Entornos disponibles:\n- **Local**: http://localhost:8080\n- **Producción**: https://examia-backend-tzwg.onrender.com\n\n## Flujo de autenticación:\n1. Registrar usuario (POST /api/auth/register)\n2. Login (POST /api/auth/login) - Guarda el token automáticamente\n3. Usar endpoints protegidos con el token\n\n## Variables:\n- `baseUrl`: URL base del servidor\n- `token`: Token JWT (se guarda automáticamente después del login)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"description": "Endpoints de autenticación (públicos)",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "health"]
+						},
+						"description": "Verifica que el servicio de autenticación esté funcionando."
+					},
+					"response": []
+				},
+				{
+					"name": "Actuator Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["actuator", "health"]
+						},
+						"description": "Health check de Spring Boot Actuator. Usado por Render para verificar que la app está viva."
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('token', jsonData.token);",
+									"    console.log('Token guardado automáticamente');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"nuevo.usuario@ejemplo.com\",\n    \"password\": \"password123\",\n    \"nombre\": \"Juan\",\n    \"apellido\": \"Pérez\",\n    \"role\": \"PROFESOR\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Registra un nuevo usuario en el sistema.\n\n**Roles disponibles:**\n- `PROFESOR`: Puede crear y administrar exámenes\n- `ALUMNO`: Puede rendir exámenes\n\n**Respuestas:**\n- `201 Created`: Usuario registrado exitosamente\n- `409 Conflict`: El email ya está registrado\n- `400 Bad Request`: Datos de validación incorrectos"
+					},
+					"response": [
+						{
+							"name": "Registro exitoso",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"profesor@universidad.com\",\n    \"password\": \"password123\",\n    \"nombre\": \"María\",\n    \"apellido\": \"García\",\n    \"role\": \"PROFESOR\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/register",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "register"]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"email\": \"profesor@universidad.com\",\n    \"nombre\": \"María\",\n    \"apellido\": \"García\",\n    \"role\": \"PROFESOR\",\n    \"message\": \"Usuario registrado exitosamente\"\n}"
+						},
+						{
+							"name": "Usuario ya existe",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"usuario.existente@ejemplo.com\",\n    \"password\": \"password123\",\n    \"nombre\": \"Juan\",\n    \"apellido\": \"Pérez\",\n    \"role\": \"ALUMNO\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/register",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "register"]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"status\": 409,\n    \"error\": \"Conflict\",\n    \"message\": \"El email 'usuario.existente@ejemplo.com' ya está registrado\",\n    \"timestamp\": \"2026-05-13T15:30:00\",\n    \"path\": \"/api/auth/register\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('token', jsonData.token);",
+									"    console.log('Token guardado automáticamente');",
+									"    console.log('Usuario:', jsonData.email, '- Rol:', jsonData.role);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@examia.com\",\n    \"password\": \"test123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Inicia sesión con un usuario existente.\n\n**El token se guarda automáticamente** en la variable `{{token}}` para usarlo en requests protegidos.\n\n**Respuestas:**\n- `200 OK`: Login exitoso, devuelve token JWT\n- `404 Not Found`: Usuario no existe\n- `401 Unauthorized`: Contraseña incorrecta"
+					},
+					"response": [
+						{
+							"name": "Login exitoso",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"test@examia.com\",\n    \"password\": \"test123456\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/login",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "login"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"email\": \"test@examia.com\",\n    \"nombre\": \"Test\",\n    \"apellido\": \"Usuario\",\n    \"role\": \"PROFESOR\",\n    \"message\": \"Inicio de sesión exitoso\"\n}"
+						},
+						{
+							"name": "Usuario no encontrado",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"noexiste@ejemplo.com\",\n    \"password\": \"password123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/login",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "login"]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"status\": 404,\n    \"error\": \"Not Found\",\n    \"message\": \"No existe un usuario con el email 'noexiste@ejemplo.com'\",\n    \"timestamp\": \"2026-05-13T15:30:00\",\n    \"path\": \"/api/auth/login\"\n}"
+						},
+						{
+							"name": "Contraseña incorrecta",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"test@examia.com\",\n    \"password\": \"passwordIncorrecta\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/login",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "login"]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"status\": 401,\n    \"error\": \"Unauthorized\",\n    \"message\": \"La contraseña es incorrecta para el usuario 'test@examia.com'\",\n    \"timestamp\": \"2026-05-13T15:30:00\",\n    \"path\": \"/api/auth/login\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Endpoints Protegidos (Ejemplo)",
+			"description": "Ejemplos de cómo usar endpoints que requieren autenticación.\n\nEstos endpoints aún no están implementados, pero muestran cómo configurar el header Authorization.",
+			"item": [
+				{
+					"name": "[Ejemplo] Endpoint Protegido",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ejemplo/protegido",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "ejemplo", "protegido"]
+						},
+						"description": "**EJEMPLO** - Este endpoint no existe todavía.\n\nMuestra cómo configurar el header Authorization con el token JWT.\n\nEl token se toma automáticamente de la variable `{{token}}` que se guarda después del login."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
+

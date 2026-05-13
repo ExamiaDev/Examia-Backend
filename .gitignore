@@ -58,3 +58,4 @@ application-local.properties
 *.pem
 *.key
 
+node_modules/

@@ -230,14 +230,154 @@ Click en "Create Web Service". El primer deploy tomará varios minutos.
 
 Tu API estará disponible en: `https://examia-backend.onrender.com`
 
-## Uso del Token JWT
+## 🔐 Autenticación JWT
 
-Para endpoints protegidos (cuando los implementes), incluye el token en el header:
+Este proyecto utiliza **JWT (JSON Web Token)** para la autenticación de usuarios. JWT es un estándar abierto (RFC 7519) que permite transmitir información de forma segura entre partes como un objeto JSON.
+
+### ¿Cómo funciona?
+
+1. **Registro/Login**: El usuario envía sus credenciales
+2. **Generación del Token**: El servidor valida las credenciales y genera un JWT
+3. **Uso del Token**: El cliente incluye el token en cada request a endpoints protegidos
+4. **Validación**: El servidor valida el token en cada request
+
+### Estructura del Token JWT
+
+El token tiene 3 partes separadas por puntos (`.`):
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwicm9sZSI6IlBST0ZFU09SIiwiaWF0IjoxNjE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+│                                    │                                                                              │
+└─────── Header ─────────────────────┴─────────────────────── Payload ───────────────────────────────────────────────┴─── Signature ───
+```
+
+- **Header**: Algoritmo (HS256) y tipo de token
+- **Payload**: Datos del usuario (email, rol, nombre, fecha de expiración)
+- **Signature**: Firma para verificar que el token no fue alterado
+
+### Contenido del Token (Payload)
+
+Cuando decodificas el token, el payload contiene:
+
+```json
+{
+  "sub": "usuario@ejemplo.com",    // Email del usuario (subject)
+  "role": "PROFESOR",              // Rol del usuario
+  "nombre": "Juan",                // Nombre
+  "apellido": "Pérez",             // Apellido
+  "iat": 1616239022,               // Fecha de emisión (issued at)
+  "exp": 1616325422                // Fecha de expiración
+}
+```
+
+### Configuración del Token
+
+| Parámetro | Valor por defecto | Descripción |
+|-----------|-------------------|-------------|
+| Algoritmo | HS256 | HMAC con SHA-256 |
+| Expiración | 24 horas | Configurable via `JWT_EXPIRATION` |
+| Secret | Variable de entorno | Mínimo 256 bits (Base64) |
+
+### Uso del Token en Requests
+
+Para acceder a endpoints protegidos, incluye el token en el header `Authorization`:
 
 ```http
 GET /api/protected-endpoint
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
+
+### Ejemplo con cURL
+
+```bash
+# 1. Login para obtener el token
+TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"usuario@ejemplo.com","password":"miPassword123"}' \
+  | jq -r '.token')
+
+# 2. Usar el token en requests protegidos
+curl -X GET http://localhost:8080/api/protected-endpoint \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Ejemplo con JavaScript (Fetch)
+
+```javascript
+// Login
+const loginResponse = await fetch('http://localhost:8080/api/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'usuario@ejemplo.com',
+    password: 'miPassword123'
+  })
+});
+
+const { token } = await loginResponse.json();
+
+// Guardar token (localStorage, sessionStorage, o estado de la app)
+localStorage.setItem('token', token);
+
+// Usar token en requests protegidos
+const response = await fetch('http://localhost:8080/api/protected-endpoint', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+```
+
+### Ejemplo con Axios
+
+```javascript
+import axios from 'axios';
+
+// Configurar interceptor para agregar token automáticamente
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Login
+const { data } = await axios.post('/api/auth/login', {
+  email: 'usuario@ejemplo.com',
+  password: 'miPassword123'
+});
+localStorage.setItem('token', data.token);
+
+// Requests protegidos (el token se agrega automáticamente)
+const exams = await axios.get('/api/exams');
+```
+
+### Manejo de Errores de Autenticación
+
+| Código | Situación | Acción recomendada |
+|--------|-----------|-------------------|
+| 401 | Token inválido/expirado | Redirigir a login |
+| 403 | Sin permisos (rol incorrecto) | Mostrar mensaje de acceso denegado |
+
+### Endpoints Públicos vs Protegidos
+
+| Endpoint | Acceso | Descripción |
+|----------|--------|-------------|
+| `POST /api/auth/register` | 🌐 Público | Registro de usuarios |
+| `POST /api/auth/login` | 🌐 Público | Inicio de sesión |
+| `GET /api/auth/health` | 🌐 Público | Health check |
+| `GET /actuator/health` | 🌐 Público | Health check (Actuator) |
+| `*` (resto) | 🔒 Protegido | Requiere token JWT válido |
+
+### Decodificar Token (Debug)
+
+Para ver el contenido de un token durante desarrollo, puedes usar:
+
+- [jwt.io](https://jwt.io) - Decodificador online
+- Extensión de navegador "JWT Debugger"
+
+> ⚠️ **Nota**: Nunca compartas tokens de producción en herramientas online
 
 ## Estructura del Proyecto
 

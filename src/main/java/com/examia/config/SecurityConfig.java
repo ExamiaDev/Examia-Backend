@@ -36,15 +36,14 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos (no requieren autenticación)
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/actuator/health",
-                                "/actuator/info",
-                                "/error"
-                        ).permitAll()
-                        // Cualquier otra solicitud requiere autenticación
-                        .anyRequest().authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(
+                        "/api/auth/**",
+                        "/actuator/health",
+                        "/actuator/info",
+                        "/error"
+                ).permitAll()
+                .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

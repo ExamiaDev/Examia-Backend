@@ -59,35 +59,27 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // setAllowedOriginPatterns soporta wildcards (usar esto en lugar de setAllowedOrigins cuando se necesitan patterns)
-        configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:*",
-                "https://*.vercel.app"
-        ));
+        // Permite cualquier origen — la autenticación se maneja con JWT en header, no con cookies
+        configuration.setAllowedOriginPatterns(List.of("*"));
 
-        // Métodos HTTP permitidos
         configuration.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
         ));
 
-        // Headers permitidos
         configuration.setAllowedHeaders(List.of(
                 "Authorization",
                 "Content-Type",
-                "X-Requested-With",
                 "Accept",
                 "Origin",
                 "Access-Control-Request-Method",
                 "Access-Control-Request-Headers"
         ));
 
-        // Headers expuestos al cliente
         configuration.setExposedHeaders(List.of("Authorization"));
 
-        // Permitir credenciales (cookies, authorization headers)
-        configuration.setAllowCredentials(true);
+        // No se necesita allowCredentials=true porque usamos JWT en header (no cookies)
+        configuration.setAllowCredentials(false);
 
-        // Tiempo de cache para preflight requests (1 hora)
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

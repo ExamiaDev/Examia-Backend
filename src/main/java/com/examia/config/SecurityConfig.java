@@ -16,7 +16,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -60,27 +59,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Permitir orígenes específicos (actualizar con tu dominio de Vercel en producción)
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",           // Desarrollo local del frontend
-                "http://localhost:5173",           // Vite dev server
-                "https://*.vercel.app"             // Vercel deployments
-        ));
-
-        // También puedes usar patterns para más flexibilidad
+        // setAllowedOriginPatterns soporta wildcards (usar esto en lugar de setAllowedOrigins cuando se necesitan patterns)
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
-                "https://*.vercel.app",
-                "https://examia*.vercel.app"
+                "https://*.vercel.app"
         ));
 
         // Métodos HTTP permitidos
-        configuration.setAllowedMethods(Arrays.asList(
+        configuration.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
         ));
 
         // Headers permitidos
-        configuration.setAllowedHeaders(Arrays.asList(
+        configuration.setAllowedHeaders(List.of(
                 "Authorization",
                 "Content-Type",
                 "X-Requested-With",

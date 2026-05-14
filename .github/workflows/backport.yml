@@ -1,0 +1,107 @@
+name: Backport to Develop
+
+# Este workflow se ejecuta automáticamente cuando un PR es mergeado a main
+# Crea un PR automático para backportar los cambios a develop
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  backport:
+    name: Backport to Develop
+    runs-on: ubuntu-latest
+    # Solo ejecutar si el PR fue mergeado (no cerrado sin merge)
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create backport branch
+        id: backport
+        run: |
+          # Obtener el SHA del merge commit
+          MERGE_SHA=${{ github.event.pull_request.merge_commit_sha }}
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          
+          # Crear nombre de rama para el backport
+          BACKPORT_BRANCH="backport/pr-${PR_NUMBER}-to-develop"
+          
+          echo "Creating backport branch: $BACKPORT_BRANCH"
+          
+          # Checkout develop y crear rama de backport
+          git fetch origin develop
+          git checkout -b $BACKPORT_BRANCH origin/develop
+          
+          # Cherry-pick el merge commit
+          git cherry-pick -m 1 $MERGE_SHA || {
+            echo "Cherry-pick failed, attempting to resolve..."
+            git cherry-pick --abort || true
+            echo "backport_failed=true" >> $GITHUB_OUTPUT
+            exit 0
+          }
+          
+          # Push de la rama
+          git push origin $BACKPORT_BRANCH
+          
+          echo "backport_branch=$BACKPORT_BRANCH" >> $GITHUB_OUTPUT
+          echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "backport_failed=false" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.backport.outputs.backport_failed == 'false'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.backport.outputs.backport_branch }}
+          base: develop
+          title: "🔄 Backport: ${{ github.event.pull_request.title }}"
+          body: |
+            ## Backport automático
+            
+            Este PR fue creado automáticamente para backportar los cambios del PR #${{ github.event.pull_request.number }} a `develop`.
+            
+            **PR Original:** #${{ github.event.pull_request.number }}
+            **Título Original:** ${{ github.event.pull_request.title }}
+            **Autor Original:** @${{ github.event.pull_request.user.login }}
+            
+            ---
+            
+            ⚠️ **Revisar antes de mergear** para asegurar que no hay conflictos con cambios en `develop`.
+          labels: |
+            backport
+            automated
+          draft: false
+
+      - name: Notify if backport failed
+        if: steps.backport.outputs.backport_failed == 'true'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ⚠️ **Backport automático falló**
+            
+            No se pudo crear el backport automático a `develop` debido a conflictos.
+            
+            Por favor, crea manualmente un PR para backportar estos cambios:
+            
+            ```bash
+            git fetch origin
+            git checkout -b backport/pr-${{ github.event.pull_request.number }}-to-develop origin/develop
+            git cherry-pick -m 1 ${{ github.event.pull_request.merge_commit_sha }}
+            # Resolver conflictos si los hay
+            git push origin backport/pr-${{ github.event.pull_request.number }}-to-develop
+            ```
+

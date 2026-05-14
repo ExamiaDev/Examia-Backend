@@ -1,0 +1,104 @@
+name: Validate PR Target Branch
+
+# Este workflow valida que los PRs sigan el flujo correcto:
+# - feature/* → develop
+# - release/* → main
+# - hotfix/* → main
+# - backport/* → develop
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  validate-branch:
+    name: Validate Branch Flow
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check PR branch flow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sourceBranch = context.payload.pull_request.head.ref;
+            const targetBranch = context.payload.pull_request.base.ref;
+            
+            console.log(`Source branch: ${sourceBranch}`);
+            console.log(`Target branch: ${targetBranch}`);
+            
+            let isValid = false;
+            let expectedTarget = '';
+            let errorMessage = '';
+            
+            // Reglas de flujo de branches
+            if (sourceBranch.startsWith('feature/')) {
+              expectedTarget = 'develop';
+              isValid = targetBranch === 'develop';
+              errorMessage = `Las ramas \`feature/*\` deben ir a \`develop\`, no a \`${targetBranch}\``;
+            } 
+            else if (sourceBranch.startsWith('release/')) {
+              expectedTarget = 'main';
+              isValid = targetBranch === 'main';
+              errorMessage = `Las ramas \`release/*\` deben ir a \`main\`, no a \`${targetBranch}\``;
+            }
+            else if (sourceBranch.startsWith('hotfix/')) {
+              expectedTarget = 'main';
+              isValid = targetBranch === 'main';
+              errorMessage = `Las ramas \`hotfix/*\` deben ir a \`main\`, no a \`${targetBranch}\``;
+            }
+            else if (sourceBranch.startsWith('backport/')) {
+              expectedTarget = 'develop';
+              isValid = targetBranch === 'develop';
+              errorMessage = `Las ramas \`backport/*\` deben ir a \`develop\`, no a \`${targetBranch}\``;
+            }
+            else if (sourceBranch === 'develop') {
+              // develop solo puede ir a main (para releases)
+              expectedTarget = 'main';
+              isValid = targetBranch === 'main';
+              errorMessage = `La rama \`develop\` solo puede ir a \`main\` (para releases)`;
+            }
+            else {
+              // Otras ramas: permitir a develop o main con warning
+              isValid = targetBranch === 'develop' || targetBranch === 'main';
+              if (!isValid) {
+                errorMessage = `La rama \`${sourceBranch}\` debe ir a \`develop\` o \`main\``;
+              }
+            }
+            
+            if (!isValid) {
+              core.setFailed(`❌ Flujo de branch incorrecto!\n\n${errorMessage}\n\nPor favor, cambia el target branch a \`${expectedTarget}\`.`);
+            } else {
+              console.log(`✅ Flujo válido: ${sourceBranch} → ${targetBranch}`);
+            }
+
+      - name: Add label based on branch type
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sourceBranch = context.payload.pull_request.head.ref;
+            const labels = [];
+            
+            if (sourceBranch.startsWith('feature/')) {
+              labels.push('feature');
+            } else if (sourceBranch.startsWith('release/')) {
+              labels.push('release');
+            } else if (sourceBranch.startsWith('hotfix/')) {
+              labels.push('hotfix');
+            } else if (sourceBranch.startsWith('backport/')) {
+              labels.push('backport');
+            } else if (sourceBranch.startsWith('fix/')) {
+              labels.push('bugfix');
+            } else if (sourceBranch.startsWith('docs/')) {
+              labels.push('documentation');
+            }
+            
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: labels
+              });
+              console.log(`Added labels: ${labels.join(', ')}`);
+            }
+

@@ -446,12 +446,57 @@ Cada vez que se agregue un nuevo endpoint a la API, se debe:
   - `fix:` corrección de bugs
   - `docs:` cambios en documentación
   - `refactor:` refactorización de código
-  
-- **Branches**: 
-  - `main` - rama de producción (auto-deploy a Render)
-  - `develop` - rama de desarrollo
-  - `feature/nombre` - nuevas funcionalidades
-  - `fix/nombre` - correcciones
+
+### 🔀 Flujo de Branches (GitFlow)
+
+Este proyecto usa un flujo GitFlow con PRs obligatorios y backport automático.
+
+```
+feature/xxx ─────► develop ─────► release/vX.X.X ─────► main
+                      ▲                                   │
+                      │                                   │
+                      └───────── backport (auto) ─────────┘
+```
+
+#### Tipos de branches
+
+| Prefijo | Destino | Descripción |
+|---------|---------|-------------|
+| `feature/*` | `develop` | Nuevas funcionalidades |
+| `fix/*` | `develop` | Corrección de bugs en desarrollo |
+| `release/*` | `main` | Preparación de nueva versión |
+| `hotfix/*` | `main` | Correcciones urgentes en producción |
+| `backport/*` | `develop` | Sincronización automática de main → develop |
+
+#### Workflows automáticos
+
+- **CI (Build & Test)**: Se ejecuta en cada PR a `develop` y `main`
+- **Validate PR**: Valida que el flujo de branches sea correcto
+- **Release**: Crea tag automático cuando se mergea `release/*` a `main`
+- **Backport**: Crea PR automático para sincronizar `main` → `develop`
+
+#### Ejemplo de flujo
+
+```bash
+# 1. Crear feature
+git checkout develop && git pull
+git checkout -b feature/mi-feature
+# ... hacer cambios ...
+git push origin feature/mi-feature
+# Crear PR → develop
+
+# 2. Crear release (cuando develop está listo)
+git checkout develop && git pull
+git checkout -b release/v1.0.0
+git push origin release/v1.0.0
+# Crear PR → main
+
+# 3. Después del merge:
+#    - Se crea tag v1.0.0 automáticamente
+#    - Se crea PR de backport a develop automáticamente
+```
+
+> 📄 Ver `.github/BRANCH_PROTECTION.md` para configurar las reglas de protección de branches.
 
 ### Variables de entorno
 
@@ -466,6 +511,21 @@ MIT
 ---
 
 ## Historial de Cambios
+
+### 14/05/2026 — Configuración de Workflows
+
+- Agregados GitHub Actions workflows:
+  - `ci.yml`: Build & Test en cada PR
+  - `validate-pr.yml`: Validación del flujo de branches
+  - `release.yml`: Creación automática de tags y releases
+  - `backport.yml`: Backport automático de main a develop
+- Agregado template de PR (`.github/PULL_REQUEST_TEMPLATE.md`)
+- Documentación de branch protection rules
+
+### 14/05/2026 — Eliminación de registro
+
+- Eliminado endpoint `POST /api/auth/register`
+- Los usuarios ahora se cargan directamente en la base de datos
 
 ### 13/05/2026 — Felipe Massun
 

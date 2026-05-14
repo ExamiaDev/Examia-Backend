@@ -2,7 +2,31 @@
 
 ## Configurar en GitHub
 
-Settings → Branches → Add branch protection rule
+Settings → Branches → Add classic branch protection rule
+
+---
+
+## Reglas de Flujo de Branches
+
+### ¿Qué puede ir a `main`?
+| Rama | Permitido |
+|------|-----------|
+| `release/*` | ✅ Sí |
+| `hotfix/*` | ✅ Sí |
+| `develop` | ✅ Sí |
+| `feature/*` | ❌ NO |
+| `fix/*` | ❌ NO |
+| `backport/*` | ❌ NO |
+
+### ¿Qué puede ir a `develop`?
+| Rama | Permitido |
+|------|-----------|
+| `feature/*` | ✅ Sí |
+| `fix/*` | ✅ Sí |
+| `backport/*` | ✅ Sí |
+| `docs/*` | ✅ Sí |
+| `release/*` | ❌ NO |
+| `hotfix/*` | ❌ NO |
 
 ---
 

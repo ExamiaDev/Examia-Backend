@@ -1,0 +1,74 @@
+name: Backport to Develop
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  backport:
+    name: Backport to Develop
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create backport branch and PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MERGE_SHA=${{ github.event.pull_request.merge_commit_sha }}
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          BACKPORT_BRANCH="backport/pr-${PR_NUMBER}-to-develop"
+          
+          echo "Creating backport branch: $BACKPORT_BRANCH"
+          
+          git fetch origin develop
+          git checkout -b $BACKPORT_BRANCH origin/develop
+          
+          if git cherry-pick -m 1 $MERGE_SHA; then
+            git push origin $BACKPORT_BRANCH
+            
+            gh pr create \
+              --base develop \
+              --head $BACKPORT_BRANCH \
+              --title "🔄 Backport: $PR_TITLE" \
+              --body "## Backport automático
+
+          Este PR fue creado automáticamente para backportar los cambios del PR #${PR_NUMBER} a develop.
+
+          **PR Original:** #${PR_NUMBER}
+          **Autor Original:** @${{ github.event.pull_request.user.login }}
+
+          ---
+          ⚠️ Revisar antes de mergear." \
+              --label "backport,automated"
+          else
+            echo "Cherry-pick failed due to conflicts"
+            git cherry-pick --abort || true
+            
+            gh issue comment $PR_NUMBER --body "⚠️ **Backport automático falló**
+
+          No se pudo crear el backport a develop debido a conflictos.
+
+          Crear manualmente:
+          \`\`\`bash
+          git fetch origin
+          git checkout -b backport/pr-${PR_NUMBER}-to-develop origin/develop
+          git cherry-pick -m 1 ${MERGE_SHA}
+          # Resolver conflictos
+          git push origin backport/pr-${PR_NUMBER}-to-develop
+          \`\`\`"
+          fi
+

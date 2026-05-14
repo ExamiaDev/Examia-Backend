@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "examia-backend-collection",
 		"name": "Examia Backend API",
-		"description": "Colección de endpoints para la API de Examia Backend.\n\n## Entornos disponibles:\n- **Local**: http://localhost:8080\n- **Producción**: https://examia-backend-tzwg.onrender.com\n\n## Flujo de autenticación:\n1. Registrar usuario (POST /api/auth/register)\n2. Login (POST /api/auth/login) - Guarda el token automáticamente\n3. Usar endpoints protegidos con el token\n\n## Variables:\n- `baseUrl`: URL base del servidor\n- `token`: Token JWT (se guarda automáticamente después del login)",
+		"description": "Colección de endpoints para la API de Examia Backend.\n\n## Entornos disponibles:\n- **Local**: http://localhost:8080\n- **Producción**: https://examia-backend-tzwg.onrender.com\n\n## Flujo de autenticación:\n1. Login (POST /api/auth/login) - Guarda el token automáticamente\n2. Usar endpoints protegidos con el token\n\n**Nota**: Los usuarios son cargados directamente en la base de datos.\n\n## Variables:\n- `baseUrl`: URL base del servidor\n- `token`: Token JWT (se guarda automáticamente después del login)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -49,112 +49,6 @@
 						"description": "Health check de Spring Boot Actuator. Usado por Render para verificar que la app está viva."
 					},
 					"response": []
-				},
-				{
-					"name": "Registrar Usuario",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    var jsonData = pm.response.json();",
-									"    pm.collectionVariables.set('token', jsonData.token);",
-									"    console.log('Token guardado automáticamente');",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"nuevo.usuario@ejemplo.com\",\n    \"password\": \"password123\",\n    \"nombre\": \"Juan\",\n    \"apellido\": \"Pérez\",\n    \"role\": \"PROFESOR\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/auth/register",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "auth", "register"]
-						},
-						"description": "Registra un nuevo usuario en el sistema.\n\n**Roles disponibles:**\n- `PROFESOR`: Puede crear y administrar exámenes\n- `ALUMNO`: Puede rendir exámenes\n\n**Respuestas:**\n- `201 Created`: Usuario registrado exitosamente\n- `409 Conflict`: El email ya está registrado\n- `400 Bad Request`: Datos de validación incorrectos"
-					},
-					"response": [
-						{
-							"name": "Registro exitoso",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"email\": \"profesor@universidad.com\",\n    \"password\": \"password123\",\n    \"nombre\": \"María\",\n    \"apellido\": \"García\",\n    \"role\": \"PROFESOR\"\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/api/auth/register",
-									"host": ["{{baseUrl}}"],
-									"path": ["api", "auth", "register"]
-								}
-							},
-							"status": "Created",
-							"code": 201,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"body": "{\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"email\": \"profesor@universidad.com\",\n    \"nombre\": \"María\",\n    \"apellido\": \"García\",\n    \"role\": \"PROFESOR\",\n    \"message\": \"Usuario registrado exitosamente\"\n}"
-						},
-						{
-							"name": "Usuario ya existe",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"email\": \"usuario.existente@ejemplo.com\",\n    \"password\": \"password123\",\n    \"nombre\": \"Juan\",\n    \"apellido\": \"Pérez\",\n    \"role\": \"ALUMNO\"\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/api/auth/register",
-									"host": ["{{baseUrl}}"],
-									"path": ["api", "auth", "register"]
-								}
-							},
-							"status": "Conflict",
-							"code": 409,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"body": "{\n    \"status\": 409,\n    \"error\": \"Conflict\",\n    \"message\": \"El email 'usuario.existente@ejemplo.com' ya está registrado\",\n    \"timestamp\": \"2026-05-13T15:30:00\",\n    \"path\": \"/api/auth/register\"\n}"
-						}
-					]
 				},
 				{
 					"name": "Login",

@@ -33,9 +33,11 @@ postman/
 ### Características de la colección
 
 - ✅ **Variables de entorno**: Cambiá fácilmente entre Local y Producción
-- ✅ **Token automático**: Después de login/register, el token se guarda automáticamente
+- ✅ **Token automático**: Después del login, el token se guarda automáticamente
 - ✅ **Ejemplos de respuesta**: Cada endpoint tiene ejemplos de respuestas exitosas y errores
 - ✅ **Documentación inline**: Descripción de cada endpoint y sus parámetros
+
+> **Nota**: Los usuarios son cargados directamente en la base de datos. No hay endpoint de registro público.
 
 ### Entornos disponibles
 
@@ -79,42 +81,7 @@ La aplicación estará disponible en `http://localhost:8080`.
 
 ### Autenticación
 
-#### Registrar Usuario
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-    "email": "usuario@ejemplo.com",
-    "password": "miPassword123",
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "role": "ALUMNO"  // o "PROFESOR"
-}
-```
-
-**Respuesta exitosa (201 Created):**
-```json
-{
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "email": "usuario@ejemplo.com",
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "role": "ALUMNO",
-    "message": "Usuario registrado exitosamente"
-}
-```
-
-**Error - Usuario ya existe (409 Conflict):**
-```json
-{
-    "status": 409,
-    "error": "Conflict",
-    "message": "El email 'usuario@ejemplo.com' ya está registrado",
-    "timestamp": "2024-01-15T10:30:00",
-    "path": "/api/auth/register"
-}
-```
+> **Nota**: Los usuarios son cargados directamente en la base de datos y se les otorgan sus credenciales de forma manual. No hay endpoint de registro público.
 
 #### Iniciar Sesión
 ```http
@@ -270,10 +237,12 @@ Este proyecto utiliza **JWT (JSON Web Token)** para la autenticación de usuario
 
 ### ¿Cómo funciona?
 
-1. **Registro/Login**: El usuario envía sus credenciales
+1. **Login**: El usuario envía sus credenciales
 2. **Generación del Token**: El servidor valida las credenciales y genera un JWT
 3. **Uso del Token**: El cliente incluye el token en cada request a endpoints protegidos
 4. **Validación**: El servidor valida el token en cada request
+
+> **Nota**: Los usuarios son cargados directamente en la base de datos por un administrador.
 
 ### Estructura del Token JWT
 
@@ -398,7 +367,6 @@ const exams = await axios.get('/api/exams');
 
 | Endpoint | Acceso | Descripción |
 |----------|--------|-------------|
-| `POST /api/auth/register` | 🌐 Público | Registro de usuarios |
 | `POST /api/auth/login` | 🌐 Público | Inicio de sesión |
 | `GET /api/auth/health` | 🌐 Público | Health check |
 | `GET /actuator/health` | 🌐 Público | Health check (Actuator) |
@@ -427,12 +395,10 @@ src/main/java/com/examia/
 ├── dto/
 │   ├── AuthResponse.java        # Respuesta de auth
 │   ├── ErrorResponse.java       # Respuesta de errores
-│   ├── LoginRequest.java        # Request de login
-│   └── RegisterRequest.java     # Request de registro
+│   └── LoginRequest.java        # Request de login
 ├── exception/
 │   ├── GlobalExceptionHandler.java
 │   ├── InvalidCredentialsException.java
-│   ├── UserAlreadyExistsException.java
 │   └── UserNotFoundException.java
 ├── model/
 │   ├── Role.java                # Enum de roles

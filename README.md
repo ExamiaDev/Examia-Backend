@@ -480,12 +480,54 @@ Cada vez que se agregue un nuevo endpoint a la API, se debe:
   - `fix:` corrección de bugs
   - `docs:` cambios en documentación
   - `refactor:` refactorización de código
-  
-- **Branches**: 
-  - `main` - rama de producción (auto-deploy a Render)
-  - `develop` - rama de desarrollo
-  - `feature/nombre` - nuevas funcionalidades
-  - `fix/nombre` - correcciones
+
+### 🔀 Flujo de Branches (GitFlow)
+
+Este proyecto usa GitFlow con PRs obligatorios y backport automático.
+
+```
+feature/xxx ─────► develop ─────► release/vX.X.X ─────► main
+                      ▲                                   │
+                      │                                   │
+                      └───────── backport (auto) ─────────┘
+```
+
+#### Tipos de branches
+
+| Prefijo | Destino | Descripción |
+|---------|---------|-------------|
+| `feature/*` | `develop` | Nuevas funcionalidades |
+| `fix/*` | `develop` | Corrección de bugs |
+| `release/*` | `main` | Nueva versión |
+| `hotfix/*` | `main` | Correcciones urgentes en prod |
+| `backport/*` | `develop` | Sincronización auto main→develop |
+
+#### Workflows automáticos
+
+- **CI**: Build & Test en cada PR
+- **Validate PR**: Valida el flujo de branches
+- **Release**: Crea tag automático en merge de `release/*` a `main`
+- **Backport**: Crea PR automático para sincronizar `main` → `develop`
+
+#### Ejemplo de flujo
+
+```bash
+# 1. Crear feature
+git checkout develop && git pull
+git checkout -b feature/mi-feature
+# ... hacer cambios ...
+git push origin feature/mi-feature
+# Crear PR → develop
+
+# 2. Crear release
+git checkout develop && git pull
+git checkout -b release/v1.0.0
+git push origin release/v1.0.0
+# Crear PR → main
+# Auto: se crea tag v1.0.0 + PR backport a develop
+```
+
+> 📄 Ver `.github/BRANCH_PROTECTION.md` para configurar reglas de protección.
 
 ### Variables de entorno
 

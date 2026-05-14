@@ -497,3 +497,24 @@ Nunca commitear credenciales. Usar:
 
 MIT
 
+---
+
+## Historial de Cambios
+
+### 13/05/2026 — Felipe Massun
+
+#### Corrección de CORS para producción
+
+- **`SecurityConfig.java`**: reescritura completa de la configuración CORS para soportar previews dinámicos de Vercel y desarrollo local:
+  - Eliminado `setAllowedOrigins` con wildcard (no funciona en ese método, Spring lo trata como string literal).
+  - Reemplazado por `setAllowedOriginPatterns(List.of("http://localhost:*", "https://*.vercel.app"))` que sí soporta wildcards.
+  - `setAllowedHeaders(List.of("*"))` y `setExposedHeaders(List.of("*"))` para no bloquear ningún header.
+  - `setAllowCredentials(true)` requerido para que el browser acepte respuestas de preflight con header `Authorization`.
+  - Agregado `.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()` para que Spring Security nunca bloquee preflight antes del filtro CORS.
+  - Import de `org.springframework.http.HttpMethod` limpiado al nivel de clase.
+
+#### Configuración de deploy
+
+- **`Dockerfile`**: corregido el `HEALTHCHECK` cuyo `--start-period=5s` mataba el container antes de que Spring Boot + MongoDB terminaran de inicializar (~20-40s). Nuevos valores: `--start-period=90s`, `--timeout=10s`, `--retries=5`.
+- **`render.yaml`**: creado para declarar el servicio en Render con tipo `web`, runtime `docker`, `healthCheckPath: /actuator/health` y declaración de variables de entorno requeridas (`MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRATION`, `PORT`).
+

@@ -30,7 +30,6 @@ jobs:
 
       - name: Run tests
         run: ./gradlew test
-        continue-on-error: true
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

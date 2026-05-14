@@ -33,9 +33,11 @@ postman/
 ### Características de la colección
 
 - ✅ **Variables de entorno**: Cambiá fácilmente entre Local y Producción
-- ✅ **Token automático**: Después de login/register, el token se guarda automáticamente
+- ✅ **Token automático**: Después del login, el token se guarda automáticamente
 - ✅ **Ejemplos de respuesta**: Cada endpoint tiene ejemplos de respuestas exitosas y errores
 - ✅ **Documentación inline**: Descripción de cada endpoint y sus parámetros
+
+> **Nota**: Los usuarios son cargados directamente en la base de datos por un administrador. No hay registro público.
 
 ### Entornos disponibles
 
@@ -79,42 +81,7 @@ La aplicación estará disponible en `http://localhost:8080`.
 
 ### Autenticación
 
-#### Registrar Usuario
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-    "email": "usuario@ejemplo.com",
-    "password": "miPassword123",
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "role": "ALUMNO"  // o "PROFESOR"
-}
-```
-
-**Respuesta exitosa (201 Created):**
-```json
-{
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "email": "usuario@ejemplo.com",
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "role": "ALUMNO",
-    "message": "Usuario registrado exitosamente"
-}
-```
-
-**Error - Usuario ya existe (409 Conflict):**
-```json
-{
-    "status": 409,
-    "error": "Conflict",
-    "message": "El email 'usuario@ejemplo.com' ya está registrado",
-    "timestamp": "2024-01-15T10:30:00",
-    "path": "/api/auth/register"
-}
-```
+> **Nota**: Los usuarios son cargados directamente en la base de datos por un administrador. No hay endpoint de registro público.
 
 #### Iniciar Sesión
 ```http

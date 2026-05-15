@@ -36,4 +36,3 @@ public class RegisterRequest {
     @NotNull(message = "El rol es obligatorio")
     private Role role;
 }
-

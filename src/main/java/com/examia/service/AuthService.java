@@ -2,9 +2,7 @@ package com.examia.service;
 
 import com.examia.dto.AuthResponse;
 import com.examia.dto.LoginRequest;
-import com.examia.dto.RegisterRequest;
 import com.examia.exception.InvalidCredentialsException;
-import com.examia.exception.UserAlreadyExistsException;
 import com.examia.exception.UserNotFoundException;
 import com.examia.model.User;
 import com.examia.repository.UserRepository;

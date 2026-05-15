@@ -2,9 +2,7 @@ package com.examia.controller;
 
 import com.examia.dto.AuthResponse;
 import com.examia.dto.LoginRequest;
-import com.examia.dto.RegisterRequest;
 import com.examia.exception.InvalidCredentialsException;
-import com.examia.exception.UserAlreadyExistsException;
 import com.examia.model.Role;
 import com.examia.service.AuthService;
 import org.junit.jupiter.api.Test;

@@ -2,7 +2,6 @@ package com.examia.controller;
 
 import com.examia.dto.AuthResponse;
 import com.examia.dto.LoginRequest;
-import com.examia.dto.RegisterRequest;
 import com.examia.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

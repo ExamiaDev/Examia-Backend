@@ -21,20 +21,6 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * Registra un nuevo usuario en el sistema.
-     *
-     * POST /api/auth/register
-     *
-     * @param request datos del registro (email, password, nombre, apellido, role)
-     * @return AuthResponse con token JWT y datos del usuario
-     */
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    /**
      * Autentica un usuario existente.
      *
      * POST /api/auth/login

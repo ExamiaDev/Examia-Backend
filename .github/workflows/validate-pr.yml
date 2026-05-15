@@ -1,0 +1,135 @@
+name: Validate PR Target Branch
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-branch:
+    name: Validate Branch Flow
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check PR branch flow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sourceBranch = context.payload.pull_request.head.ref;
+            const targetBranch = context.payload.pull_request.base.ref;
+            
+            console.log(`\n📋 Validando flujo de branches`);
+            console.log(`   Source: ${sourceBranch}`);
+            console.log(`   Target: ${targetBranch}\n`);
+            
+            // ═══════════════════════════════════════════════════════════
+            // REGLAS DE FLUJO:
+            // - A main SOLO pueden ir: release/*, hotfix/*, develop
+            // - A develop SOLO pueden ir: feature/*, fix/*, backport/*, docs/*
+            // ═══════════════════════════════════════════════════════════
+            
+            let isValid = false;
+            let errorMessage = '';
+            let allowedSources = [];
+            
+            // Validación por TARGET (qué puede entrar a cada rama)
+            if (targetBranch === 'main') {
+              allowedSources = ['release/', 'hotfix/', 'develop'];
+              isValid = sourceBranch.startsWith('release/') || 
+                        sourceBranch.startsWith('hotfix/') || 
+                        sourceBranch === 'develop';
+              
+              if (!isValid) {
+                errorMessage = `❌ A \`main\` solo pueden ir:\n` +
+                  `   • release/*\n` +
+                  `   • hotfix/*\n` +
+                  `   • develop\n\n` +
+                  `Tu rama \`${sourceBranch}\` NO puede ir directamente a main.\n` +
+                  `👉 Cambia el target a \`develop\` primero.`;
+              }
+            }
+            else if (targetBranch === 'develop') {
+              allowedSources = ['feature/', 'fix/', 'backport/', 'docs/'];
+              isValid = sourceBranch.startsWith('feature/') || 
+                        sourceBranch.startsWith('fix/') || 
+                        sourceBranch.startsWith('backport/') ||
+                        sourceBranch.startsWith('docs/');
+              
+              if (!isValid) {
+                errorMessage = `❌ A \`develop\` solo pueden ir:\n` +
+                  `   • feature/*\n` +
+                  `   • fix/*\n` +
+                  `   • backport/*\n` +
+                  `   • docs/*\n\n` +
+                  `Tu rama \`${sourceBranch}\` NO puede ir a develop.`;
+                
+                if (sourceBranch.startsWith('release/') || sourceBranch.startsWith('hotfix/')) {
+                  errorMessage += `\n👉 Las ramas ${sourceBranch.split('/')[0]}/* deben ir a \`main\`.`;
+                }
+              }
+            }
+            else {
+              // Target no es main ni develop
+              errorMessage = `❌ Solo se puede hacer PR a \`main\` o \`develop\`.\n` +
+                `El target \`${targetBranch}\` no es válido.`;
+            }
+            
+            // Validación adicional por SOURCE (a dónde debe ir cada rama)
+            if (isValid) {
+              let expectedTarget = '';
+              
+              if (sourceBranch.startsWith('feature/') || sourceBranch.startsWith('fix/') || sourceBranch.startsWith('docs/')) {
+                expectedTarget = 'develop';
+              } else if (sourceBranch.startsWith('release/') || sourceBranch.startsWith('hotfix/')) {
+                expectedTarget = 'main';
+              } else if (sourceBranch.startsWith('backport/')) {
+                expectedTarget = 'develop';
+              } else if (sourceBranch === 'develop') {
+                expectedTarget = 'main';
+              }
+              
+              if (expectedTarget && targetBranch !== expectedTarget) {
+                isValid = false;
+                errorMessage = `❌ Las ramas \`${sourceBranch.split('/')[0]}/*\` deben ir a \`${expectedTarget}\`, no a \`${targetBranch}\``;
+              }
+            }
+            
+            if (!isValid) {
+              console.log(errorMessage);
+              core.setFailed(errorMessage);
+            } else {
+              console.log(`✅ Flujo válido: ${sourceBranch} → ${targetBranch}`);
+              console.log(`\n📝 Regla aplicada:`);
+              if (targetBranch === 'main') {
+                console.log(`   main acepta: release/*, hotfix/*, develop`);
+              } else {
+                console.log(`   develop acepta: feature/*, fix/*, backport/*, docs/*`);
+              }
+            }
+
+      - name: Add label based on branch type
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sourceBranch = context.payload.pull_request.head.ref;
+            const labels = [];
+            
+            if (sourceBranch.startsWith('feature/')) labels.push('feature');
+            else if (sourceBranch.startsWith('release/')) labels.push('release');
+            else if (sourceBranch.startsWith('hotfix/')) labels.push('hotfix');
+            else if (sourceBranch.startsWith('backport/')) labels.push('backport');
+            else if (sourceBranch.startsWith('fix/')) labels.push('bugfix');
+            else if (sourceBranch.startsWith('docs/')) labels.push('documentation');
+            
+            if (labels.length > 0) {
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  labels: labels
+                });
+              } catch (e) {
+                console.log('Could not add labels:', e.message);
+              }
+            }
+

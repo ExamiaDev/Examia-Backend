@@ -33,9 +33,11 @@ postman/
 ### Características de la colección
 
 - ✅ **Variables de entorno**: Cambiá fácilmente entre Local y Producción
-- ✅ **Token automático**: Después de login/register, el token se guarda automáticamente
+- ✅ **Token automático**: Después del login, el token se guarda automáticamente
 - ✅ **Ejemplos de respuesta**: Cada endpoint tiene ejemplos de respuestas exitosas y errores
 - ✅ **Documentación inline**: Descripción de cada endpoint y sus parámetros
+
+> **Nota**: Los usuarios son cargados directamente en la base de datos por un administrador. No hay registro público.
 
 ### Entornos disponibles
 
@@ -79,42 +81,7 @@ La aplicación estará disponible en `http://localhost:8080`.
 
 ### Autenticación
 
-#### Registrar Usuario
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-    "email": "usuario@ejemplo.com",
-    "password": "miPassword123",
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "role": "ALUMNO"  // o "PROFESOR"
-}
-```
-
-**Respuesta exitosa (201 Created):**
-```json
-{
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "email": "usuario@ejemplo.com",
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "role": "ALUMNO",
-    "message": "Usuario registrado exitosamente"
-}
-```
-
-**Error - Usuario ya existe (409 Conflict):**
-```json
-{
-    "status": 409,
-    "error": "Conflict",
-    "message": "El email 'usuario@ejemplo.com' ya está registrado",
-    "timestamp": "2024-01-15T10:30:00",
-    "path": "/api/auth/register"
-}
-```
+> **Nota**: Los usuarios son cargados directamente en la base de datos por un administrador. No hay endpoint de registro público.
 
 #### Iniciar Sesión
 ```http
@@ -480,12 +447,54 @@ Cada vez que se agregue un nuevo endpoint a la API, se debe:
   - `fix:` corrección de bugs
   - `docs:` cambios en documentación
   - `refactor:` refactorización de código
-  
-- **Branches**: 
-  - `main` - rama de producción (auto-deploy a Render)
-  - `develop` - rama de desarrollo
-  - `feature/nombre` - nuevas funcionalidades
-  - `fix/nombre` - correcciones
+
+### 🔀 Flujo de Branches (GitFlow)
+
+Este proyecto usa GitFlow con PRs obligatorios y backport automático.
+
+```
+feature/xxx ─────► develop ─────► release/vX.X.X ─────► main
+                      ▲                                   │
+                      │                                   │
+                      └───────── backport (auto) ─────────┘
+```
+
+#### Tipos de branches
+
+| Prefijo | Destino | Descripción |
+|---------|---------|-------------|
+| `feature/*` | `develop` | Nuevas funcionalidades |
+| `fix/*` | `develop` | Corrección de bugs |
+| `release/*` | `main` | Nueva versión |
+| `hotfix/*` | `main` | Correcciones urgentes en prod |
+| `backport/*` | `develop` | Sincronización auto main→develop |
+
+#### Workflows automáticos
+
+- **CI**: Build & Test en cada PR
+- **Validate PR**: Valida el flujo de branches
+- **Release**: Crea tag automático en merge de `release/*` a `main`
+- **Backport**: Crea PR automático para sincronizar `main` → `develop`
+
+#### Ejemplo de flujo
+
+```bash
+# 1. Crear feature
+git checkout develop && git pull
+git checkout -b feature/mi-feature
+# ... hacer cambios ...
+git push origin feature/mi-feature
+# Crear PR → develop
+
+# 2. Crear release
+git checkout develop && git pull
+git checkout -b release/v1.0.0
+git push origin release/v1.0.0
+# Crear PR → main
+# Auto: se crea tag v1.0.0 + PR backport a develop
+```
+
+> 📄 Ver `.github/BRANCH_PROTECTION.md` para configurar reglas de protección.
 
 ### Variables de entorno
 
@@ -496,4 +505,25 @@ Nunca commitear credenciales. Usar:
 ## Licencia
 
 MIT
+
+---
+
+## Historial de Cambios
+
+### 13/05/2026 — Felipe Massun
+
+#### Corrección de CORS para producción
+
+- **`SecurityConfig.java`**: reescritura completa de la configuración CORS para soportar previews dinámicos de Vercel y desarrollo local:
+  - Eliminado `setAllowedOrigins` con wildcard (no funciona en ese método, Spring lo trata como string literal).
+  - Reemplazado por `setAllowedOriginPatterns(List.of("http://localhost:*", "https://*.vercel.app"))` que sí soporta wildcards.
+  - `setAllowedHeaders(List.of("*"))` y `setExposedHeaders(List.of("*"))` para no bloquear ningún header.
+  - `setAllowCredentials(true)` requerido para que el browser acepte respuestas de preflight con header `Authorization`.
+  - Agregado `.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()` para que Spring Security nunca bloquee preflight antes del filtro CORS.
+  - Import de `org.springframework.http.HttpMethod` limpiado al nivel de clase.
+
+#### Configuración de deploy
+
+- **`Dockerfile`**: corregido el `HEALTHCHECK` cuyo `--start-period=5s` mataba el container antes de que Spring Boot + MongoDB terminaran de inicializar (~20-40s). Nuevos valores: `--start-period=90s`, `--timeout=10s`, `--retries=5`.
+- **`render.yaml`**: creado para declarar el servicio en Render con tipo `web`, runtime `docker`, `healthCheckPath: /actuator/health` y declaración de variables de entorno requeridas (`MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRATION`, `PORT`).
 

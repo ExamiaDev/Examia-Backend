@@ -1,0 +1,44 @@
+name: Auto Release Tag
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  create-release:
+    name: Create Release Tag
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.merged == true && 
+      startsWith(github.event.pull_request.head.ref, 'release/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version and create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=$(echo $BRANCH_NAME | sed 's/release\///')
+          
+          if [[ ! $VERSION == v* ]]; then
+            VERSION="v$VERSION"
+          fi
+          
+          echo "Creating release: $VERSION"
+          
+          gh release create $VERSION \
+            --title "Release $VERSION" \
+            --notes "## ${{ github.event.pull_request.title }}
+
+          ${{ github.event.pull_request.body }}
+
+          ---
+          🚀 Released from PR #${{ github.event.pull_request.number }}" \
+            --target main
+

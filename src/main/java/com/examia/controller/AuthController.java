@@ -5,13 +5,15 @@ import com.examia.dto.LoginRequest;
 import com.examia.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * Controlador REST para operaciones de autenticación.
- * Endpoints para registro e inicio de sesión de usuarios.
+ * Endpoint para inicio de sesión de usuarios.
+ *
+ * Nota: Los usuarios son cargados directamente en la base de datos
+ * por un administrador. No hay registro público.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -19,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-
+  
     /**
      * Autentica un usuario existente.
      *

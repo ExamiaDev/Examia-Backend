@@ -10,10 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 /**
- * Servicio para la autenticación de usuarios (registro y login).
+ * Servicio para la autenticación de usuarios.
+ *
+ * Nota: Los usuarios son cargados directamente en la base de datos
+ * por un administrador. No hay registro público.
  */
 @Service
 @RequiredArgsConstructor

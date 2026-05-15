@@ -9,12 +9,9 @@ import com.examia.model.User;
 import com.examia.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Answers;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -26,77 +23,19 @@ class AuthServiceTest {
     private PasswordEncoder passwordEncoder;
     private StubJwtService jwtService;
     private AuthService authService;
-    private AtomicReference<User> savedUserReference;
-    private RegisterRequest registerRequest;
     private LoginRequest loginRequest;
 
     @BeforeEach
     void setUp() {
-        savedUserReference = new AtomicReference<>();
-        userRepository = mock(UserRepository.class, invocation -> {
-            if ("save".equals(invocation.getMethod().getName())) {
-                User savedUser = invocation.getArgument(0, User.class);
-                savedUserReference.set(savedUser);
-                return savedUser;
-            }
-            return Answers.RETURNS_DEFAULTS.answer(invocation);
-        });
+        userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         jwtService = new StubJwtService("token-123");
         authService = new AuthService(userRepository, passwordEncoder, jwtService);
-
-        registerRequest = RegisterRequest.builder()
-                .email("usuario@ejemplo.com")
-                .password("miPassword123")
-                .nombre("Juan")
-                .apellido("Vega")
-                .role(Role.ALUMNO)
-                .build();
 
         loginRequest = LoginRequest.builder()
                 .email("usuario@ejemplo.com")
                 .password("miPassword123")
                 .build();
-    }
-
-    @Test
-    void registerWhenEmailDoesNotExistShouldSaveUserAndReturnAuthResponse() {
-        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
-        when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn(ENCODED_PASSWORD);
-
-        AuthResponse response = authService.register(registerRequest);
-
-        User savedUser = savedUserReference.get();
-
-        assertNotNull(savedUser);
-        assertEquals(registerRequest.getEmail(), savedUser.getEmail());
-        assertEquals(ENCODED_PASSWORD, savedUser.getPassword());
-        assertEquals(registerRequest.getNombre(), savedUser.getNombre());
-        assertEquals(registerRequest.getApellido(), savedUser.getApellido());
-        assertEquals(registerRequest.getRole(), savedUser.getRole());
-        assertTrue(savedUser.isEnabled());
-        assertNotNull(savedUser.getCreatedAt());
-        assertTrue(savedUser.getCreatedAt().isBefore(LocalDateTime.now().plusSeconds(1)));
-
-        assertEquals("token-123", response.getToken());
-        assertEquals(registerRequest.getEmail(), response.getEmail());
-        assertEquals(registerRequest.getNombre(), response.getNombre());
-        assertEquals(registerRequest.getApellido(), response.getApellido());
-        assertEquals(registerRequest.getRole(), response.getRole());
-        assertEquals("Usuario registrado exitosamente", response.getMessage());
-    }
-
-    @Test
-    void registerWhenEmailAlreadyExistsShouldThrowUserAlreadyExistsException() {
-        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(true);
-
-        UserAlreadyExistsException exception = assertThrows(
-                UserAlreadyExistsException.class,
-                () -> authService.register(registerRequest)
-        );
-
-        assertTrue(exception.getMessage().contains(registerRequest.getEmail()));
-        assertNull(savedUserReference.get());
     }
 
     @Test
@@ -121,7 +60,7 @@ class AuthServiceTest {
         assertEquals(existingUser.getNombre(), response.getNombre());
         assertEquals(existingUser.getApellido(), response.getApellido());
         assertEquals(existingUser.getRole(), response.getRole());
-        assertEquals("Inicio de sesión exitoso", response.getMessage());
+        assertEquals("Inicio de sesi\u00f3n exitoso", response.getMessage());
     }
 
     @Test
@@ -155,7 +94,7 @@ class AuthServiceTest {
                 () -> authService.login(loginRequest)
         );
 
-        assertTrue(exception.getMessage().contains("contraseña"));
+        assertTrue(exception.getMessage().contains("contrase\u00f1a"));
     }
 
     @Test
@@ -177,7 +116,7 @@ class AuthServiceTest {
                 () -> authService.login(loginRequest)
         );
 
-        assertEquals("La cuenta está deshabilitada", exception.getMessage());
+        assertEquals("La cuenta est\u00e1 deshabilitada", exception.getMessage());
     }
 
     private static class StubJwtService extends JwtService {

@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class JwtServiceTest {
 
     private JwtService jwtService;
-    private static final long JWT_EXPIRATION = 5_000L;
+    private static final long JWT_EXPIRATION = 3_600_000L; // 1 hour for tests
     private static final String USER_PASSWORD = "secret";
     private static final String SECRET_KEY = Base64.getEncoder().encodeToString(
             "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8)

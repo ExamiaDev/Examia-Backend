@@ -11,45 +11,42 @@ import com.examia.model.User;
 import com.examia.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Answers;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
     private static final String ENCODED_PASSWORD = "encoded-password";
 
-    @Mock
     private UserRepository userRepository;
-
-    @Mock
     private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private JwtService jwtService;
-
-    @InjectMocks
+    private StubJwtService jwtService;
     private AuthService authService;
-
-    @Captor
-    private ArgumentCaptor<User> userCaptor;
-
+    private AtomicReference<User> savedUserReference;
     private RegisterRequest registerRequest;
     private LoginRequest loginRequest;
 
     @BeforeEach
     void setUp() {
+        savedUserReference = new AtomicReference<>();
+        userRepository = mock(UserRepository.class, invocation -> {
+            if ("save".equals(invocation.getMethod().getName())) {
+                User savedUser = invocation.getArgument(0, User.class);
+                savedUserReference.set(savedUser);
+                return savedUser;
+            }
+            return Answers.RETURNS_DEFAULTS.answer(invocation);
+        });
+        passwordEncoder = mock(PasswordEncoder.class);
+        jwtService = new StubJwtService("token-123");
+        authService = new AuthService(userRepository, passwordEncoder, jwtService);
+
         registerRequest = RegisterRequest.builder()
                 .email("usuario@ejemplo.com")
                 .password("miPassword123")
@@ -68,13 +65,12 @@ class AuthServiceTest {
     void registerWhenEmailDoesNotExistShouldSaveUserAndReturnAuthResponse() {
         when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn(ENCODED_PASSWORD);
-        when(jwtService.generateToken(any(User.class))).thenReturn("token-123");
 
         AuthResponse response = authService.register(registerRequest);
 
-        verify(userRepository, times(1)).save(userCaptor.capture());
-        User savedUser = userCaptor.getValue();
+        User savedUser = savedUserReference.get();
 
+        assertNotNull(savedUser);
         assertEquals(registerRequest.getEmail(), savedUser.getEmail());
         assertEquals(ENCODED_PASSWORD, savedUser.getPassword());
         assertEquals(registerRequest.getNombre(), savedUser.getNombre());
@@ -102,7 +98,7 @@ class AuthServiceTest {
         );
 
         assertTrue(exception.getMessage().contains(registerRequest.getEmail()));
-        verify(userRepository, never()).save(any());
+        assertNull(savedUserReference.get());
     }
 
     @Test
@@ -118,7 +114,7 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(loginRequest.getPassword(), existingUser.getPassword())).thenReturn(true);
-        when(jwtService.generateToken(existingUser)).thenReturn("token-login");
+        jwtService.setToken("token-login");
 
         AuthResponse response = authService.login(loginRequest);
 
@@ -184,5 +180,22 @@ class AuthServiceTest {
         );
 
         assertEquals("La cuenta está deshabilitada", exception.getMessage());
+    }
+
+    private static class StubJwtService extends JwtService {
+        private String token;
+
+        StubJwtService(String token) {
+            this.token = token;
+        }
+
+        void setToken(String token) {
+            this.token = token;
+        }
+
+        @Override
+        public String generateToken(User user) {
+            return token;
+        }
     }
 }

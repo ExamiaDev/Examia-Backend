@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: examia-backend
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/examia}
+
+  # Jackson configuration
+  jackson:
+    default-property-inclusion: non_null
+
+# Server configuration
+server:
+  port: ${PORT:8080}
+
+# JWT Configuration
+jwt:
+  # El secret debe ser una cadena Base64 de al menos 256 bits (32 bytes)
+  # Para producción, configurar la variable de entorno JWT_SECRET con un valor seguro
+  secret: ${JWT_SECRET:YOUR_BASE64_ENCODED_SECRET_HERE}
+  expiration: ${JWT_EXPIRATION:86400000}  # 24 hours in milliseconds
+
+# Actuator endpoints for health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

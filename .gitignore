@@ -26,6 +26,7 @@ replay_pid*
 # Gradle
 .gradle/
 build/
+bin/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -50,6 +51,15 @@ Thumbs.db
 # Environment variables
 .env
 .env.local
+.env.production
+.env.staging
+.env.*
+
+# Application configuration overrides
+application-local.yml
+application-dev.yml
+application-prod.yml
+application-staging.yml
 .env.*.local
 application-local.yml
 application-local.properties

@@ -24,7 +24,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-
     /**
      * Autentica un usuario existente.
      *

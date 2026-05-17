@@ -21,8 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-
-
+  
     /**
      * Autentica un usuario existente.
      *

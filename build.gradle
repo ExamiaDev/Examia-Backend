@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.2.5'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'jacoco'
+    id "org.sonarqube" version "7.3.0.8198"
 }
 
 group = 'com.examia'
@@ -17,7 +18,6 @@ configurations {
         extendsFrom annotationProcessor
     }
 }
-
 
 repositories {
     mavenCentral()
@@ -61,5 +61,16 @@ jacocoTestReport {
         xml.required = true
         html.required = true
         csv.required = false
+    }
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "ExamiaDev_Examia-Backend"
+        property "sonar.organization", "examiadev"
+        property "sonar.host.url", "https://sonarcloud.io"
+
+        property "sonar.coverage.jacoco.xmlReportPaths",
+                "$buildDir/reports/jacoco/test/jacocoTestReport.xml"
     }
 }

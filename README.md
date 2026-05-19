@@ -1,14 +1,64 @@
 # Examia Backend
 
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=ExamiaDev_Examia-Backend)](https://sonarcloud.io/summary/new_code?id=ExamiaDev_Examia-Backend)
+
 Backend API para la aplicación Examia - Sistema de corrección automática de exámenes mediante IA.
 
-## Tecnologías
+## 🏗️ Arquitectura
 
-- **Java 17**
-- **Spring Boot 3.2.5**
-- **MongoDB** (Atlas para producción)
-- **JWT** para autenticación
-- **Gradle** como build tool
+El proyecto sigue una arquitectura en capas con separación clara de responsabilidades:
+
+```
+src/main/java/com/examia/
+├── config/              # Configuración de Spring (Security, Auth, etc)
+├── controller/          # Endpoints REST
+├── service/             # Lógica de negocio
+├── repository/          # Acceso a datos (MongoDB)
+├── model/               # Entidades de dominio
+├── dto/                 # Data Transfer Objects
+├── exception/           # Excepciones personalizadas
+└── security/            # Filtros y utilidades de JWT
+```
+
+### Flujo de Autenticación
+
+1. **Request** → `JwtAuthenticationFilter`
+2. **Validación JWT** → Extrae el token del header
+3. **Carga del Usuario** → `UserDetailsService` desde MongoDB
+4. **Contexto de Seguridad** → Spring Security establece el usuario
+5. **Ejecución** → El endpoint procesa con permisos validados
+
+## 🛠️ Stack Tecnológico
+
+### Core
+- **Java 17** - Lenguaje de programación
+- **Spring Boot 3.2.5** - Framework web
+- **Spring Security 6.x** - Autenticación y autorización
+
+### Persistencia
+- **MongoDB** - Base de datos NoSQL
+- **Spring Data MongoDB** - ORM para MongoDB
+- **MongoDB Atlas** - Servicio en la nube (producción)
+
+### Seguridad
+- **JWT (JSON Web Token)** - Tokens de autenticación stateless
+- **BCrypt** - Encriptación de contraseñas
+- **CORS** - Control de acceso entre dominios
+
+### Build & Deploy
+- **Gradle 8.x** - Build tool
+- **Docker** - Containerización
+- **Render** - Plataforma de hosting
+
+### Testing & Calidad
+- **JUnit 5** - Framework de testing
+- **Mockito** - Mocking en tests
+- **SonarCloud** - Análisis de código
+- **JaCoCo** - Cobertura de código
+
+### Documentación
+- **Swagger/OpenAPI** - API documentation (opcional)
+- **Postman** - Colección para testing manual
 
 ## 📬 Colección de Postman
 
@@ -76,6 +126,26 @@ Asegúrate de tener MongoDB corriendo localmente en `mongodb://localhost:27017`.
 ```
 
 La aplicación estará disponible en `http://localhost:8080`.
+
+### 4. Comandos de build y análisis
+
+```bash
+# Compilar, ejecutar tests, generar reporte de cobertura y analizar con Sonar
+./gradlew clean build jacocoTestReport sonar --info
+
+# Iniciar la aplicación localmente
+./gradlew bootRun
+```
+
+### 5. Swagger
+
+Una vez que la aplicación esté corriendo localmente, la documentación Swagger queda disponible en:
+
+`http://localhost:8080/swagger-ui/index.html`
+
+O ingresar sin necesidad de correrlo localmente a 
+
+`https://examia-backend.onrender.com/swagger-ui/index.html`
 
 ## Endpoints de la API
 

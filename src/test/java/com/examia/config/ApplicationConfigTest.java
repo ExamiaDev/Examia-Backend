@@ -41,10 +41,11 @@ class ApplicationConfigTest {
         UserRepository userRepository = mock(UserRepository.class);
         ApplicationConfig config = new ApplicationConfig(userRepository);
         when(userRepository.findByEmail("missing@ejemplo.com")).thenReturn(Optional.empty());
+        var userDetailsService = config.userDetailsService();
 
         UsernameNotFoundException exception = assertThrows(
                 UsernameNotFoundException.class,
-                () -> config.userDetailsService().loadUserByUsername("missing@ejemplo.com")
+                () -> userDetailsService.loadUserByUsername("missing@ejemplo.com")
         );
 
         assertTrue(exception.getMessage().contains("missing@ejemplo.com"));

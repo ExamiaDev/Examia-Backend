@@ -6,6 +6,7 @@ import com.examia.dto.LoginUadeRequest;
 import com.examia.dto.RegisterRequest;
 import com.examia.exception.InvalidCredentialsException;
 import com.examia.exception.UserAlreadyExistsException;
+import com.examia.exception.UserNotFoundException;
 import com.examia.model.Role;
 import com.examia.service.AuthService;
 import org.junit.jupiter.api.Test;
@@ -115,6 +116,20 @@ class AuthControllerTest {
     }
 
     @Test
+    void loginWhenUserNotFoundShouldThrowUserNotFoundException() {
+        UserNotFoundException exception = new UserNotFoundException("Usuario no encontrado");
+        when(authService.login(any(LoginRequest.class)))
+                .thenThrow(exception);
+
+        UserNotFoundException thrownException = assertThrows(
+                UserNotFoundException.class,
+                () -> controller.login(validLoginRequest())
+        );
+
+        assertEquals("Usuario no encontrado", thrownException.getMessage());
+    }
+
+    @Test
     void healthShouldReturnServiceStatus() {
         ResponseEntity<String> response = controller.health();
 
@@ -160,6 +175,33 @@ class AuthControllerTest {
         );
 
         assertTrue(exception.getMessage().contains("email"));
+    }
+
+    @Test
+    void loginUadeWhenLegajoNotFoundShouldThrowUserNotFoundException() {
+        UserNotFoundException exception = new UserNotFoundException("Legajo no encontrado");
+        when(authService.loginUade(any(LoginUadeRequest.class)))
+                .thenThrow(exception);
+
+        UserNotFoundException thrownException = assertThrows(
+                UserNotFoundException.class,
+                () -> controller.loginUade(validLoginUadeRequest())
+        );
+
+        assertEquals("Legajo no encontrado", thrownException.getMessage());
+    }
+
+    @Test
+    void loginUadeWhenPasswordIncorrectShouldThrowInvalidCredentialsException() {
+        when(authService.loginUade(any(LoginUadeRequest.class)))
+                .thenThrow(new InvalidCredentialsException("La contraseña es incorrecta"));
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> controller.loginUade(validLoginUadeRequest())
+        );
+
+        assertTrue(exception.getMessage().contains("contraseña"));
     }
 
     private LoginRequest validLoginRequest() {

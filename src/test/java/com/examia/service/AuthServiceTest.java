@@ -222,6 +222,18 @@ class AuthServiceTest {
         assertEquals("La cuenta está deshabilitada", exception.getMessage());
     }
 
+    @Test
+    void loginWhenUserNotFoundShouldThrowUserNotFoundException() {
+        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
+
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> authService.login(loginRequest)
+        );
+
+        assertTrue(exception.getMessage().contains(loginRequest.getEmail()));
+    }
+
     // ==================== TESTS DE LOGIN UADE ====================
 
     @Test
@@ -358,6 +370,31 @@ class AuthServiceTest {
         );
 
         assertEquals("La cuenta está deshabilitada", exception.getMessage());
+    }
+
+    @Test
+    void registerWhenVerifyUserSavedCalled() {
+        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
+        when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(false);
+        when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn(ENCODED_PASSWORD);
+
+        User expectedUser = User.builder()
+                .nombre(registerRequest.getNombre())
+                .apellido(registerRequest.getApellido())
+                .username(registerRequest.getUsername())
+                .email(registerRequest.getEmail())
+                .recoveryEmail(registerRequest.getRecoveryEmail())
+                .password(ENCODED_PASSWORD)
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        when(userRepository.save(any(User.class))).thenReturn(expectedUser);
+        jwtService.setToken("register-token");
+
+        authService.register(registerRequest);
+
+        verify(userRepository).save(any(User.class));
     }
 
     private static class StubJwtService extends JwtService {

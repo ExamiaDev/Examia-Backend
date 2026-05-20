@@ -39,6 +39,11 @@ public class User implements UserDetails {
 
     private String apellido;
 
+    @Indexed(unique = true, sparse = true)
+    private String username;
+
+    private String recoveryEmail;
+
     private Role role;
 
     @CreatedDate

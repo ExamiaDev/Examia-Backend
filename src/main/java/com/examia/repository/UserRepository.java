@@ -27,5 +27,7 @@ public interface UserRepository extends MongoRepository<User, String> {
      * @return true si el usuario existe, false en caso contrario
      */
     boolean existsByEmail(String email);
+
+    boolean existsByUsername(String username);
 }
 

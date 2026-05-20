@@ -2,8 +2,11 @@ package com.examia.service;
 
 import com.examia.dto.AuthResponse;
 import com.examia.dto.LoginRequest;
+import com.examia.dto.RegisterRequest;
 import com.examia.exception.InvalidCredentialsException;
+import com.examia.exception.UserAlreadyExistsException;
 import com.examia.exception.UserNotFoundException;
+import com.examia.model.Role;
 import com.examia.model.User;
 import com.examia.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,43 @@ public class AuthService {
      * @throws UserNotFoundException si el usuario no existe
      * @throws InvalidCredentialsException si la contraseña es incorrecta
      */
+    public AuthResponse register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new UserAlreadyExistsException(
+                    "Ya existe un usuario con el email '" + request.getEmail() + "'"
+            );
+        }
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new UserAlreadyExistsException(
+                    "Ya existe un usuario con el nombre de usuario '" + request.getUsername() + "'"
+            );
+        }
+
+        User user = User.builder()
+                .nombre(request.getNombre())
+                .apellido(request.getApellido())
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .recoveryEmail(request.getRecoveryEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        userRepository.save(user);
+
+        String token = jwtService.generateToken(user);
+
+        return AuthResponse.builder()
+                .token(token)
+                .email(user.getEmail())
+                .nombre(user.getNombre())
+                .apellido(user.getApellido())
+                .role(user.getRole())
+                .message("Registro exitoso")
+                .build();
+    }
+
     public AuthResponse login(LoginRequest request) {
         // Buscar el usuario por email
         User user = userRepository.findByEmail(request.getEmail())

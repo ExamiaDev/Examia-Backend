@@ -104,10 +104,11 @@ class AuthControllerTest {
     void loginWhenCredentialsAreInvalidShouldThrowInvalidCredentialsException() {
         when(authService.login(any(LoginRequest.class)))
                 .thenThrow(new InvalidCredentialsException("La contrasena es incorrecta"));
+        var loginRequest = validLoginRequest();
 
         InvalidCredentialsException exception = assertThrows(
                 InvalidCredentialsException.class,
-                () -> controller.login(validLoginRequest())
+                () -> controller.login(loginRequest)
         );
 
         assertEquals("La contrasena es incorrecta", exception.getMessage());

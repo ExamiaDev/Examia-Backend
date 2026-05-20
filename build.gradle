@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.2.5'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'jacoco'
+    id "org.sonarqube" version "7.3.0.8198"
 }
 
 group = 'com.examia'
@@ -18,7 +19,6 @@ configurations {
     }
 }
 
-
 repositories {
     mavenCentral()
 }
@@ -30,6 +30,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Swagger / OpenAPI
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
@@ -64,5 +67,27 @@ jacocoTestReport {
         xml.required = true
         html.required = true
         csv.required = false
+    }
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "ExamiaDev_Examia-Backend"
+        property "sonar.organization", "examiadev"
+        property "sonar.host.url", "https://sonarcloud.io"
+
+        property "sonar.coverage.jacoco.xmlReportPaths",
+                "$buildDir/reports/jacoco/test/jacocoTestReport.xml"
+    
+        property "sonar.coverage.exclusions", """
+            **/*Application.java,
+            **/config/**,
+            **/dto/**,
+            **/model/**,
+            **/entity/**,
+            **/exception/**,
+            **/*Request.java,
+            **/*Response.java
+        """    
     }
 }

@@ -1,14 +1,91 @@
 # Examia Backend
 
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=ExamiaDev_Examia-Backend)](https://sonarcloud.io/summary/new_code?id=ExamiaDev_Examia-Backend)
+
 Backend API para la aplicación Examia - Sistema de corrección automática de exámenes mediante IA.
 
-## Tecnologías
+## 🏗️ Arquitectura
 
-- **Java 17**
-- **Spring Boot 3.2.5**
-- **MongoDB** (Atlas para producción)
-- **JWT** para autenticación
-- **Gradle** como build tool
+El backend es un servicio Spring Boot con separación de responsabilidades y workflows automáticos en `.github/workflows`.
+
+Estructura principal del proyecto:
+
+```
+.
+├── .github/
+│   └── workflows/
+│       ├── build.yml
+│       ├── ci.yml
+│       ├── release.yml
+│       ├── validate-pr.yml
+│       └── backport.yml
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   └── resources/
+│   └── test/
+├── postman/
+├── application.yml.example
+├── build.gradle
+├── settings.gradle
+├── Dockerfile
+├── package.json
+└── README.md
+```
+
+Estructura de código dentro de `src/main/java/com/examia`:
+
+```
+src/main/java/com/examia/
+├── config/              # Configuración de Spring (Security, Auth, OpenAPI, etc)
+├── controller/          # Endpoints REST
+├── service/             # Lógica de negocio
+├── repository/          # Acceso a datos (MongoDB)
+├── model/               # Entidades de dominio
+├── dto/                 # Data Transfer Objects
+├── exception/           # Excepciones personalizadas
+└── security/            # Filtros y utilidades de JWT
+```
+
+### Flujo de Autenticación
+
+1. **Request** → `JwtAuthenticationFilter`
+2. **Validación JWT** → Extrae el token del header
+3. **Carga del Usuario** → `UserDetailsService` desde MongoDB
+4. **Contexto de Seguridad** → Spring Security establece el usuario
+5. **Ejecución** → El endpoint procesa con permisos validados
+
+## 🛠️ Stack Tecnológico
+
+### Core
+- **Java 17** - Lenguaje de programación
+- **Spring Boot 3.2.5** - Framework web
+- **Spring Security 6.x** - Autenticación y autorización
+
+### Persistencia
+- **MongoDB** - Base de datos NoSQL
+- **Spring Data MongoDB** - ORM para MongoDB
+- **MongoDB Atlas** - Servicio en la nube (producción)
+
+### Seguridad
+- **JWT (JSON Web Token)** - Tokens de autenticación stateless
+- **BCrypt** - Encriptación de contraseñas
+- **CORS** - Control de acceso entre dominios
+
+### Build & Deploy
+- **Gradle 8.x** - Build tool
+- **Docker** - Containerización
+- **Render** - Plataforma de hosting
+
+### Testing & Calidad
+- **JUnit 5** - Framework de testing
+- **Mockito** - Mocking en tests
+- **SonarCloud** - Análisis de código
+- **JaCoCo** - Cobertura de código
+
+### Documentación
+- **Swagger/OpenAPI** - API documentation (opcional)
+- **Postman** - Colección para testing manual
 
 ## 📬 Colección de Postman
 
@@ -76,6 +153,26 @@ Asegúrate de tener MongoDB corriendo localmente en `mongodb://localhost:27017`.
 ```
 
 La aplicación estará disponible en `http://localhost:8080`.
+
+### 4. Comandos de build y análisis
+
+```bash
+# Compilar, ejecutar tests, generar reporte de cobertura y analizar con Sonar
+./gradlew clean build jacocoTestReport sonar --info
+
+# Iniciar la aplicación localmente
+./gradlew bootRun
+```
+
+### 5. Swagger
+
+Una vez que la aplicación esté corriendo localmente, la documentación Swagger queda disponible en:
+
+`http://localhost:8080/swagger-ui/index.html`
+
+O ingresar sin necesidad de correrlo localmente a 
+
+`https://examia-backend.onrender.com/swagger-ui/index.html`
 
 ## Endpoints de la API
 
@@ -507,36 +604,80 @@ Para ver el contenido de un token durante desarrollo, puedes usar:
 ## Estructura del Proyecto
 
 ```
-src/main/java/com/examia/
-├── ExamiaApplication.java       # Clase principal
-├── config/
-│   ├── ApplicationConfig.java   # Configuración de beans
-│   ├── MongoConfig.java         # Configuración de MongoDB
-│   └── SecurityConfig.java      # Configuración de Spring Security
-├── controller/
-│   └── AuthController.java      # Endpoints de autenticación
-├── dto/
-│   ├── AuthResponse.java        # Respuesta de auth
-│   ├── ErrorResponse.java       # Respuesta de errores
-│   ├── LoginRequest.java        # Request de login
-│   ├── LoginUadeRequest.java    # Request de login UADE
-│   └── RegisterRequest.java     # Request de registro
-├── exception/
-│   ├── GlobalExceptionHandler.java
-│   ├── InvalidCredentialsException.java
-│   ├── UserAlreadyExistsException.java
-│   └── UserNotFoundException.java
-├── model/
-│   ├── Role.java                # Enum de roles
-│   └── User.java                # Entidad usuario
-├── repository/
-│   └── UserRepository.java      # Repositorio MongoDB
-├── security/
-│   └── JwtAuthenticationFilter.java
-└── service/
-    ├── AuthService.java         # Lógica de autenticación
-    └── JwtService.java          # Manejo de tokens JWT
+.
+├── .github/
+│   └── workflows/
+│       ├── build.yml              # Build y tests automáticos
+│       ├── ci.yml                 # Integración continua
+│       ├── release.yml            # Pipeline de releases
+│       ├── validate-pr.yml        # Validación de Pull Requests
+│       └── backport.yml           # Backports automáticos
+│
+├── src/
+│   ├── main/
+│   │   ├── java/com/examia/
+│   │   │   ├── ExamiaApplication.java      # Clase principal
+│   │   │   │
+│   │   │   ├── config/
+│   │   │   │   ├── ApplicationConfig.java # Configuración de beans
+│   │   │   │   ├── MongoConfig.java       # Configuración MongoDB
+│   │   │   │   ├── OpenApiConfig.java     # Configuración Swagger/OpenAPI
+│   │   │   │   └── SecurityConfig.java    # Configuración Spring Security
+│   │   │   │
+│   │   │   ├── controller/
+│   │   │   │   └── AuthController.java    # Endpoints de autenticación
+│   │   │   │
+│   │   │   ├── dto/
+│   │   │   │   ├── AuthResponse.java
+│   │   │   │   ├── ErrorResponse.java
+│   │   │   │   ├── LoginRequest.java
+│   │   │   │   ├── LoginUadeRequest.java
+│   │   │   │   └── RegisterRequest.java
+│   │   │   │
+│   │   │   ├── exception/
+│   │   │   │   ├── GlobalExceptionHandler.java
+│   │   │   │   ├── InvalidCredentialsException.java
+│   │   │   │   ├── UserAlreadyExistsException.java
+│   │   │   │   └── UserNotFoundException.java
+│   │   │   │
+│   │   │   ├── model/
+│   │   │   │   ├── Role.java              # Enum de roles
+│   │   │   │   └── User.java              # Entidad usuario
+│   │   │   │
+│   │   │   ├── repository/
+│   │   │   │   └── UserRepository.java    # Repositorio MongoDB
+│   │   │   │
+│   │   │   ├── security/
+│   │   │   │   └── JwtAuthenticationFilter.java
+│   │   │   │
+│   │   │   └── service/
+│   │   │       ├── AuthService.java       # Lógica autenticación
+│   │   │       └── JwtService.java        # Manejo JWT
+│   │   │
+│   │   └── resources/
+│   │       └── application.yml            # Configuración principal
+│   │
+│   └── test/                              # Tests unitarios/integración
+│
+├── postman/                               # Colecciones Postman
+├── application.yml.example               # Variables ejemplo
+├── build.gradle                          # Dependencias Gradle
+├── settings.gradle                       # Configuración Gradle
+├── Dockerfile                            # Containerización Docker
+├── package.json                          # Scripts auxiliares
+└── README.md                             # Documentación proyecto
 ```
+
+### Contenido clave
+
+- `src/main/java/com/examia/config/` – configuración de Spring y seguridad
+- `src/main/java/com/examia/controller/` – endpoints REST
+- `src/main/java/com/examia/service/` – lógica de negocio
+- `src/main/java/com/examia/repository/` – acceso a MongoDB
+- `src/main/java/com/examia/model/` – entidades de dominio
+- `src/main/java/com/examia/dto/` – objetos de transferencia
+- `src/main/java/com/examia/exception/` – manejo de errores personalizado
+- `src/main/java/com/examia/security/` – filtro JWT y componentes de seguridad
 
 ## Próximos Pasos
 
@@ -549,7 +690,14 @@ src/main/java/com/examia/
 ## 📋 Buenas Prácticas para el Equipo
 
 ### Al agregar nuevos endpoints
+Las automatizaciones del proyecto están definidas en `.github/workflows` y ayudan a mantener la calidad del código y el flujo de GitFlow.
 
+- **CI** (`ci.yml`): compila el proyecto y ejecuta tests en cada push y PR a `develop` o `main`.
+- **Build** (`build.yml`): realiza build y tests en PR/push, y sube artefactos de compilación.
+- **SonarQube** (`build.yml` / `SonarQube`): ejecuta `./gradlew clean build jacocoTestReport sonar --info` para analizar calidad y cobertura.
+- **Validate PR** (`validate-pr.yml`): valida que las ramas sigan el flujo GitFlow antes de aprobar un PR.
+- **Release** (`release.yml`): genera tags/release al mergear `release/*` a `main`.
+- **Backport** (`backport.yml`): crea PR automático para sincronizar `main` a `develop` cuando corresponde.
 Cada vez que se agregue un nuevo endpoint a la API, se debe:
 
 1. **Actualizar la colección de Postman**
@@ -596,10 +744,14 @@ feature/xxx ─────► develop ─────► release/vX.X.X ──�
 
 #### Workflows automáticos
 
-- **CI**: Build & Test en cada PR
-- **Validate PR**: Valida el flujo de branches
-- **Release**: Crea tag automático en merge de `release/*` a `main`
-- **Backport**: Crea PR automático para sincronizar `main` → `develop`
+Las automatizaciones del proyecto se ejecutan desde `.github/workflows`.
+
+- **CI** (`ci.yml`): compila y ejecuta tests en cada push y PR a `develop` o `main`.
+- **Build** (`build.yml`): build y tests en PR/push, sube artefactos de compilación.
+- **SonarQube** (`build.yml` / `SonarQube`): analiza el código con `./gradlew clean build jacocoTestReport sonar --info` en push a `main`/`develop` y en PR.
+- **Validate PR** (`validate-pr.yml`): valida que las ramas sigan la política GitFlow antes de crear un PR.
+- **Release** (`release.yml`): gestiona tags y releases automáticos al mergear `release/*` a `main`.
+- **Backport** (`backport.yml`): crea PR automático para sincronizar cambios de `main` a `develop` cuando corresponde.
 
 #### Ejemplo de flujo
 

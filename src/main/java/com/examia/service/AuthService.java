@@ -2,6 +2,7 @@ package com.examia.service;
 
 import com.examia.dto.AuthResponse;
 import com.examia.dto.LoginRequest;
+import com.examia.dto.LoginUadeRequest;
 import com.examia.dto.RegisterRequest;
 import com.examia.exception.InvalidCredentialsException;
 import com.examia.exception.UserAlreadyExistsException;
@@ -47,12 +48,17 @@ public class AuthService {
             );
         }
 
+        // Si no se proporciona recoveryEmail, usar el email principal
+        String recoveryEmail = (request.getRecoveryEmail() != null && !request.getRecoveryEmail().isBlank())
+                ? request.getRecoveryEmail()
+                : request.getEmail();
+
         User user = User.builder()
                 .nombre(request.getNombre())
                 .apellido(request.getApellido())
                 .username(request.getUsername())
                 .email(request.getEmail())
-                .recoveryEmail(request.getRecoveryEmail())
+                .recoveryEmail(recoveryEmail)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.ALUMNO)
                 .enabled(true)
@@ -83,6 +89,53 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException(
                     "La contraseña es incorrecta para el usuario '" + request.getEmail() + "'"
+            );
+        }
+
+        // Verificar si el usuario está habilitado
+        if (!user.isEnabled()) {
+            throw new InvalidCredentialsException("La cuenta está deshabilitada");
+        }
+
+        // Generar token JWT
+        String token = jwtService.generateToken(user);
+
+        return AuthResponse.builder()
+                .token(token)
+                .email(user.getEmail())
+                .nombre(user.getNombre())
+                .apellido(user.getApellido())
+                .role(user.getRole())
+                .message("Inicio de sesión exitoso")
+                .build();
+    }
+
+    /**
+     * Autentica un usuario UADE utilizando legajo, email y contraseña.
+     *
+     * @param request datos del login UADE (legajo, email, password)
+     * @return AuthResponse con el token y datos del usuario
+     * @throws UserNotFoundException si el usuario con ese legajo no existe
+     * @throws InvalidCredentialsException si el email no coincide o la contraseña es incorrecta
+     */
+    public AuthResponse loginUade(LoginUadeRequest request) {
+        // Buscar el usuario por legajo
+        User user = userRepository.findByLegajo(request.getLegajo())
+                .orElseThrow(() -> new UserNotFoundException(
+                        "No existe un usuario con el legajo '" + request.getLegajo() + "'"
+                ));
+
+        // Verificar que el email coincida
+        if (!user.getEmail().equals(request.getEmail())) {
+            throw new InvalidCredentialsException(
+                    "El email no coincide con el legajo '" + request.getLegajo() + "'"
+            );
+        }
+
+        // Verificar la contraseña
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException(
+                    "La contraseña es incorrecta para el usuario con legajo '" + request.getLegajo() + "'"
             );
         }
 

@@ -2,6 +2,7 @@ package com.examia.controller;
 
 import com.examia.dto.AuthResponse;
 import com.examia.dto.LoginRequest;
+import com.examia.dto.LoginUadeRequest;
 import com.examia.dto.RegisterRequest;
 import com.examia.service.AuthService;
 import jakarta.validation.Valid;
@@ -45,10 +46,24 @@ public class AuthController {
     }
 
     /**
+     * Autentica un usuario UADE usando legajo, email y contraseña.
+     *
+     * POST /api/auth/login-uade
+     *
+     * @param request datos del login UADE (legajo, email, password)
+     * @return AuthResponse con token JWT y datos del usuario
+     */
+    @PostMapping("/login-uade")
+    public ResponseEntity<AuthResponse> loginUade(@Valid @RequestBody LoginUadeRequest request) {
+        AuthResponse response = authService.loginUade(request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Endpoint de verificación de estado del servicio de auth.
-     *
+
      * GET /api/auth/health
-     *
+
      * @return mensaje de estado
      */
     @GetMapping("/health")

@@ -42,6 +42,9 @@ public class User implements UserDetails {
     @Indexed(unique = true, sparse = true)
     private String username;
 
+    @Indexed(unique = true, sparse = true)
+    private String legajo;
+
     private String recoveryEmail;
 
     private Role role;

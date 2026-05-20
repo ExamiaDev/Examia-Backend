@@ -28,7 +28,6 @@ public class RegisterRequest {
     @Email(message = "El formato del mail principal no es válido")
     private String email;
 
-    @NotBlank(message = "El mail de recupero es obligatorio")
     @Email(message = "El formato del mail de recupero no es válido")
     private String recoveryEmail;
 

@@ -81,7 +81,71 @@ La aplicación estará disponible en `http://localhost:8080`.
 
 ### Autenticación
 
-> **Nota**: Los usuarios son cargados directamente en la base de datos por un administrador. No hay endpoint de registro público.
+#### Registrar Usuario Externo
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "username": "juanperez",
+    "email": "juan@ejemplo.com",
+    "recoveryEmail": "juan.recovery@gmail.com",
+    "password": "miPassword123"
+}
+```
+
+> **Nota**: El campo `recoveryEmail` es opcional. Si no se proporciona, se usará el email principal.
+
+**Respuesta exitosa (201 Created):**
+```json
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "email": "juan@ejemplo.com",
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "role": "ALUMNO",
+    "message": "Registro exitoso"
+}
+```
+
+**Error - Email ya registrado (409 Conflict):**
+```json
+{
+    "status": 409,
+    "error": "Conflict",
+    "message": "Ya existe un usuario con el email 'juan@ejemplo.com'",
+    "timestamp": "2026-05-20T10:30:00",
+    "path": "/api/auth/register"
+}
+```
+
+**Error - Username ya en uso (409 Conflict):**
+```json
+{
+    "status": 409,
+    "error": "Conflict",
+    "message": "Ya existe un usuario con el nombre de usuario 'juanperez'",
+    "timestamp": "2026-05-20T10:30:00",
+    "path": "/api/auth/register"
+}
+```
+
+**Error - Validación fallida (400 Bad Request):**
+```json
+{
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Error de validación",
+    "errors": {
+        "nombre": "El nombre es obligatorio",
+        "email": "El formato del mail principal no es válido"
+    },
+    "timestamp": "2026-05-20T10:30:00",
+    "path": "/api/auth/register"
+}
+```
 
 #### Iniciar Sesión
 ```http

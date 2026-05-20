@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "examia-backend-collection",
 		"name": "Examia Backend API",
-		"description": "Colección de endpoints para la API de Examia Backend.\n\n## Entornos disponibles:\n- **Local**: http://localhost:8080\n- **Producción**: https://examia-backend-tzwg.onrender.com\n\n## Flujo de autenticación:\n1. Login (POST /api/auth/login) - Guarda el token automáticamente\n2. Usar endpoints protegidos con el token\n\n**Nota**: Los usuarios son cargados directamente en la base de datos por un administrador.\n\n## Variables:\n- `baseUrl`: URL base del servidor\n- `token`: Token JWT (se guarda automáticamente después del login)",
+		"description": "Colección de endpoints para la API de Examia Backend.\n\n## Entornos disponibles:\n- **Local**: http://localhost:8080\n- **Producción**: https://examia-backend-tzwg.onrender.com\n\n## Flujo de autenticación:\n1. Register (POST /api/auth/register) - Registra un usuario externo\n2. Login (POST /api/auth/login) - Guarda el token automáticamente\n3. Usar endpoints protegidos con el token\n\n## Variables:\n- `baseUrl`: URL base del servidor\n- `token`: Token JWT (se guarda automáticamente después del login/register)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -185,6 +185,175 @@
 								}
 							],
 							"body": "{\n    \"status\": 401,\n    \"error\": \"Unauthorized\",\n    \"message\": \"La contraseña es incorrecta para el usuario 'test@examia.com'\",\n    \"timestamp\": \"2026-05-14T15:30:00\",\n    \"path\": \"/api/auth/login\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('token', jsonData.token);",
+									"    console.log('Token guardado automáticamente');",
+									"    console.log('Usuario registrado:', jsonData.email, '- Rol:', jsonData.role);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Juan\",\n    \"apellido\": \"Pérez\",\n    \"username\": \"juanperez\",\n    \"email\": \"juan@ejemplo.com\",\n    \"recoveryEmail\": \"juan.recovery@gmail.com\",\n    \"password\": \"miPassword123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Registra un nuevo usuario externo.\n\n**El token se guarda automáticamente** en la variable `{{token}}` para usarlo en requests protegidos.\n\n**Campos:**\n- `nombre`: Nombre del usuario (obligatorio)\n- `apellido`: Apellido del usuario (obligatorio)\n- `username`: Nombre de usuario único (obligatorio)\n- `email`: Email principal (obligatorio)\n- `recoveryEmail`: Email de recuperación (opcional, si no se envía usa el email principal)\n- `password`: Contraseña (obligatorio)\n\n**Respuestas:**\n- `201 Created`: Registro exitoso\n- `409 Conflict`: Email o username ya existe\n- `400 Bad Request`: Error de validación"
+					},
+					"response": [
+						{
+							"name": "Registro exitoso",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"nombre\": \"Juan\",\n    \"apellido\": \"Pérez\",\n    \"username\": \"juanperez\",\n    \"email\": \"juan@ejemplo.com\",\n    \"recoveryEmail\": \"juan.recovery@gmail.com\",\n    \"password\": \"miPassword123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/register",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "register"]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"email\": \"juan@ejemplo.com\",\n    \"nombre\": \"Juan\",\n    \"apellido\": \"Pérez\",\n    \"role\": \"ALUMNO\",\n    \"message\": \"Registro exitoso\"\n}"
+						},
+						{
+							"name": "Email ya existe",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"nombre\": \"Juan\",\n    \"apellido\": \"Pérez\",\n    \"username\": \"juanperez2\",\n    \"email\": \"juan@ejemplo.com\",\n    \"password\": \"miPassword123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/register",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "register"]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"status\": 409,\n    \"error\": \"Conflict\",\n    \"message\": \"Ya existe un usuario con el email 'juan@ejemplo.com'\",\n    \"timestamp\": \"2026-05-20T15:30:00\",\n    \"path\": \"/api/auth/register\"\n}"
+						},
+						{
+							"name": "Username ya existe",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"nombre\": \"Juan\",\n    \"apellido\": \"Pérez\",\n    \"username\": \"juanperez\",\n    \"email\": \"juan2@ejemplo.com\",\n    \"password\": \"miPassword123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/register",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "register"]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"status\": 409,\n    \"error\": \"Conflict\",\n    \"message\": \"Ya existe un usuario con el nombre de usuario 'juanperez'\",\n    \"timestamp\": \"2026-05-20T15:30:00\",\n    \"path\": \"/api/auth/register\"\n}"
+						},
+						{
+							"name": "Error de validación",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"nombre\": \"\",\n    \"email\": \"email-invalido\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/register",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "register"]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"status\": 400,\n    \"error\": \"Bad Request\",\n    \"message\": \"Error de validación\",\n    \"errors\": {\n        \"nombre\": \"El nombre es obligatorio\",\n        \"email\": \"El formato del mail principal no es válido\",\n        \"password\": \"La contraseña es obligatoria\"\n    },\n    \"timestamp\": \"2026-05-20T15:30:00\",\n    \"path\": \"/api/auth/register\"\n}"
 						}
 					]
 				}

@@ -47,12 +47,17 @@ public class AuthService {
             );
         }
 
+        // Si no se proporciona recoveryEmail, usar el email principal
+        String recoveryEmail = (request.getRecoveryEmail() != null && !request.getRecoveryEmail().isBlank())
+                ? request.getRecoveryEmail()
+                : request.getEmail();
+
         User user = User.builder()
                 .nombre(request.getNombre())
                 .apellido(request.getApellido())
                 .username(request.getUsername())
                 .email(request.getEmail())
-                .recoveryEmail(request.getRecoveryEmail())
+                .recoveryEmail(recoveryEmail)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.ALUMNO)
                 .enabled(true)

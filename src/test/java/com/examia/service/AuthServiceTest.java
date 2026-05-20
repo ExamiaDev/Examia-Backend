@@ -2,6 +2,7 @@ package com.examia.service;
 
 import com.examia.dto.AuthResponse;
 import com.examia.dto.LoginRequest;
+import com.examia.dto.LoginUadeRequest;
 import com.examia.dto.RegisterRequest;
 import com.examia.exception.InvalidCredentialsException;
 import com.examia.exception.UserAlreadyExistsException;
@@ -218,7 +219,145 @@ class AuthServiceTest {
                 () -> authService.login(loginRequest)
         );
 
-        assertEquals("La cuenta est\u00e1 deshabilitada", exception.getMessage());
+        assertEquals("La cuenta está deshabilitada", exception.getMessage());
+    }
+
+    // ==================== TESTS DE LOGIN UADE ====================
+
+    @Test
+    void loginUadeWhenCredentialsAreValidShouldReturnAuthResponse() {
+        LoginUadeRequest loginUadeRequest = LoginUadeRequest.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password("miPassword123")
+                .build();
+
+        User existingUser = User.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password(ENCODED_PASSWORD)
+                .nombre("Juan")
+                .apellido("Rodriguez")
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches(loginUadeRequest.getPassword(), existingUser.getPassword())).thenReturn(true);
+        jwtService.setToken("token-uade");
+
+        AuthResponse response = authService.loginUade(loginUadeRequest);
+
+        assertEquals("token-uade", response.getToken());
+        assertEquals(existingUser.getEmail(), response.getEmail());
+        assertEquals(existingUser.getNombre(), response.getNombre());
+        assertEquals(existingUser.getApellido(), response.getApellido());
+        assertEquals(existingUser.getRole(), response.getRole());
+        assertEquals("Inicio de sesión exitoso", response.getMessage());
+    }
+
+    @Test
+    void loginUadeWhenLegajoNotFoundShouldThrowUserNotFoundException() {
+        LoginUadeRequest loginUadeRequest = LoginUadeRequest.builder()
+                .legajo("999999")
+                .email("usuario@uade.edu.ar")
+                .password("miPassword123")
+                .build();
+
+        when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.empty());
+
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> authService.loginUade(loginUadeRequest)
+        );
+
+        assertTrue(exception.getMessage().contains("999999"));
+    }
+
+    @Test
+    void loginUadeWhenEmailDoesNotMatchShouldThrowInvalidCredentialsException() {
+        LoginUadeRequest loginUadeRequest = LoginUadeRequest.builder()
+                .legajo("123456")
+                .email("wrong@uade.edu.ar")
+                .password("miPassword123")
+                .build();
+
+        User existingUser = User.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password(ENCODED_PASSWORD)
+                .nombre("Juan")
+                .apellido("Rodriguez")
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.of(existingUser));
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> authService.loginUade(loginUadeRequest)
+        );
+
+        assertTrue(exception.getMessage().contains("email"));
+    }
+
+    @Test
+    void loginUadeWhenPasswordIsIncorrectShouldThrowInvalidCredentialsException() {
+        LoginUadeRequest loginUadeRequest = LoginUadeRequest.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password("wrongPassword")
+                .build();
+
+        User existingUser = User.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password(ENCODED_PASSWORD)
+                .nombre("Juan")
+                .apellido("Rodriguez")
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches(loginUadeRequest.getPassword(), existingUser.getPassword())).thenReturn(false);
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> authService.loginUade(loginUadeRequest)
+        );
+
+        assertTrue(exception.getMessage().contains("contraseña"));
+    }
+
+    @Test
+    void loginUadeWhenUserIsDisabledShouldThrowInvalidCredentialsException() {
+        LoginUadeRequest loginUadeRequest = LoginUadeRequest.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password("miPassword123")
+                .build();
+
+        User existingUser = User.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password(ENCODED_PASSWORD)
+                .nombre("Juan")
+                .apellido("Rodriguez")
+                .role(Role.ALUMNO)
+                .enabled(false)
+                .build();
+
+        when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches(loginUadeRequest.getPassword(), existingUser.getPassword())).thenReturn(true);
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> authService.loginUade(loginUadeRequest)
+        );
+
+        assertEquals("La cuenta está deshabilitada", exception.getMessage());
     }
 
     private static class StubJwtService extends JwtService {

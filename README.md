@@ -192,6 +192,65 @@ Content-Type: application/json
 }
 ```
 
+#### Iniciar Sesión UADE
+```http
+POST /api/auth/login-uade
+Content-Type: application/json
+
+{
+    "legajo": "123456",
+    "email": "usuario@uade.edu.ar",
+    "password": "miPassword123"
+}
+```
+
+> **Nota**: Este endpoint permite que estudiantes UADE se autentiquen usando su legajo, email y contraseña. El legajo es un identificador único del estudiante en UADE.
+
+**Respuesta exitosa (200 OK):**
+```json
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "email": "usuario@uade.edu.ar",
+    "nombre": "Juan",
+    "apellido": "Rodriguez",
+    "role": "ALUMNO",
+    "message": "Inicio de sesión exitoso"
+}
+```
+
+**Error - Legajo no encontrado (404 Not Found):**
+```json
+{
+    "status": 404,
+    "error": "Not Found",
+    "message": "No existe un usuario con el legajo '123456'",
+    "timestamp": "2024-01-15T10:30:00",
+    "path": "/api/auth/login-uade"
+}
+```
+
+**Error - Email no coincide (401 Unauthorized):**
+```json
+{
+    "status": 401,
+    "error": "Unauthorized",
+    "message": "El email no coincide con el legajo '123456'",
+    "timestamp": "2024-01-15T10:30:00",
+    "path": "/api/auth/login-uade"
+}
+```
+
+**Error - Contraseña incorrecta (401 Unauthorized):**
+```json
+{
+    "status": 401,
+    "error": "Unauthorized",
+    "message": "La contraseña es incorrecta para el usuario con legajo '123456'",
+    "timestamp": "2024-01-15T10:30:00",
+    "path": "/api/auth/login-uade"
+}
+```
+
 ### Health Check
 ```http
 GET /actuator/health
@@ -430,7 +489,8 @@ const exams = await axios.get('/api/exams');
 | Endpoint | Acceso | Descripción |
 |----------|--------|-------------|
 | `POST /api/auth/register` | 🌐 Público | Registro de usuarios |
-| `POST /api/auth/login` | 🌐 Público | Inicio de sesión |
+| `POST /api/auth/login` | 🌐 Público | Inicio de sesión (email + password) |
+| `POST /api/auth/login-uade` | 🌐 Público | Inicio de sesión UADE (legajo + email + password) |
 | `GET /api/auth/health` | 🌐 Público | Health check |
 | `GET /actuator/health` | 🌐 Público | Health check (Actuator) |
 | `*` (resto) | 🔒 Protegido | Requiere token JWT válido |
@@ -459,6 +519,7 @@ src/main/java/com/examia/
 │   ├── AuthResponse.java        # Respuesta de auth
 │   ├── ErrorResponse.java       # Respuesta de errores
 │   ├── LoginRequest.java        # Request de login
+│   ├── LoginUadeRequest.java    # Request de login UADE
 │   └── RegisterRequest.java     # Request de registro
 ├── exception/
 │   ├── GlobalExceptionHandler.java

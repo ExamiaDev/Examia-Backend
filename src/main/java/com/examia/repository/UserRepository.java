@@ -29,5 +29,21 @@ public interface UserRepository extends MongoRepository<User, String> {
     boolean existsByEmail(String email);
 
     boolean existsByUsername(String username);
+
+    /**
+     * Busca un usuario por su legajo.
+     *
+     * @param legajo el legajo del usuario
+     * @return Optional con el usuario si existe
+     */
+    Optional<User> findByLegajo(String legajo);
+
+    /**
+     * Verifica si existe un usuario con el legajo dado.
+     *
+     * @param legajo el legajo a verificar
+     * @return true si el usuario existe, false en caso contrario
+     */
+    boolean existsByLegajo(String legajo);
 }
 

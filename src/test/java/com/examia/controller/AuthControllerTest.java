@@ -2,6 +2,7 @@ package com.examia.controller;
 
 import com.examia.dto.AuthResponse;
 import com.examia.dto.LoginRequest;
+import com.examia.dto.LoginUadeRequest;
 import com.examia.dto.RegisterRequest;
 import com.examia.exception.InvalidCredentialsException;
 import com.examia.exception.UserAlreadyExistsException;
@@ -120,6 +121,46 @@ class AuthControllerTest {
         assertEquals("Auth service is running", response.getBody());
     }
 
+    @Test
+    void loginUadeWhenValidRequestShouldReturnAuthResponse() {
+        LoginUadeRequest loginUadeRequest = validLoginUadeRequest();
+        AuthResponse authResponse = AuthResponse.builder()
+                .token("jwt-token-uade")
+                .email("usuario@uade.edu.ar")
+                .nombre("Juan")
+                .apellido("Rodriguez")
+                .role(Role.ALUMNO)
+                .message("Inicio de sesion exitoso")
+                .build();
+
+        when(authService.loginUade(any(LoginUadeRequest.class))).thenReturn(authResponse);
+
+        ResponseEntity<AuthResponse> response = controller.loginUade(loginUadeRequest);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        AuthResponse body = response.getBody();
+        assertNotNull(body);
+        assertEquals("jwt-token-uade", body.getToken());
+        assertEquals("usuario@uade.edu.ar", body.getEmail());
+        assertEquals("Juan", body.getNombre());
+        assertEquals("Rodriguez", body.getApellido());
+        assertEquals(Role.ALUMNO, body.getRole());
+        assertEquals("Inicio de sesion exitoso", body.getMessage());
+    }
+
+    @Test
+    void loginUadeWhenCredentialsAreInvalidShouldThrowInvalidCredentialsException() {
+        when(authService.loginUade(any(LoginUadeRequest.class)))
+                .thenThrow(new InvalidCredentialsException("El email no coincide con el legajo"));
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> controller.loginUade(validLoginUadeRequest())
+        );
+
+        assertTrue(exception.getMessage().contains("email"));
+    }
+
     private LoginRequest validLoginRequest() {
         return LoginRequest.builder()
                 .email("usuario@ejemplo.com")
@@ -134,6 +175,14 @@ class AuthControllerTest {
                 .username("juanperez")
                 .email("nuevo@ejemplo.com")
                 .recoveryEmail("recovery@ejemplo.com")
+                .password("password123")
+                .build();
+    }
+
+    private LoginUadeRequest validLoginUadeRequest() {
+        return LoginUadeRequest.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
                 .password("password123")
                 .build();
     }

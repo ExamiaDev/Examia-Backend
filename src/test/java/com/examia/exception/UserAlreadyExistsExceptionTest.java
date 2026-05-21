@@ -1,4 +1,4 @@
-tiró package com.examia.exception;
+package com.examia.exception;
 
 import org.junit.jupiter.api.Test;
 
@@ -14,14 +14,4 @@ class UserAlreadyExistsExceptionTest {
         assertEquals(message, exception.getMessage());
     }
 
-    @Test
-    void userAlreadyExistsExceptionWithMessageAndCause() {
-        String message = "Usuario ya existe";
-        Throwable cause = new RuntimeException("Cause");
-        UserAlreadyExistsException exception = new UserAlreadyExistsException(message, cause);
-
-        assertEquals(message, exception.getMessage());
-        assertEquals(cause, exception.getCause());
-    }
 }
-

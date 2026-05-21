@@ -31,6 +31,7 @@ class JwtServiceTest {
     void generateTokenShouldReturnValidTokenForUser() {
         User user = User.builder()
                 .email("usuario@ejemplo.com")
+                .username("usuario@ejemplo.com")
                 .password(USER_PASSWORD)
                 .nombre("Ana")
                 .apellido("García")
@@ -41,7 +42,7 @@ class JwtServiceTest {
         String token = jwtService.generateToken(user);
 
         assertNotNull(token);
-        assertEquals(user.getEmail(), jwtService.extractEmail(token));
+        assertEquals(user.getUsername(), jwtService.extractEmail(token));
         assertTrue(jwtService.isTokenValid(token, user));
         assertEquals(JWT_EXPIRATION, jwtService.getExpirationTime());
     }
@@ -50,6 +51,7 @@ class JwtServiceTest {
     void isTokenValidShouldReturnFalseForDifferentUser() {
         User user = User.builder()
                 .email("usuario@ejemplo.com")
+                .username("usuario@ejemplo.com")
                 .password(USER_PASSWORD)
                 .nombre("Ana")
                 .apellido("García")
@@ -59,6 +61,7 @@ class JwtServiceTest {
 
         User otherUser = User.builder()
                 .email("otro@ejemplo.com")
+                .username("otro@ejemplo.com")
                 .password(USER_PASSWORD)
                 .nombre("Diego")
                 .apellido("Pérez")

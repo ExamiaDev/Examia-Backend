@@ -7,7 +7,7 @@ import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserTest {
+class UserComprehensiveTest {
 
     @Test
     void userBuilderAndGetters() {
@@ -110,4 +110,3 @@ class UserTest {
         assertTrue(user.isEnabled());
     }
 }
-

@@ -49,12 +49,12 @@ class UserTest {
     }
 
     @Test
-    void userGetUsernameReturnsEmail() {
+    void userGetUsernameReturnsUsername() {
         User user = User.builder()
-                .email("test@ejemplo.com")
+                .username("juanperez")
                 .build();
 
-        assertEquals("test@ejemplo.com", user.getUsername());
+        assertEquals("juanperez", user.getUsername());
     }
 
     @Test

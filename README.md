@@ -451,6 +451,25 @@ Click en "Create Web Service". El primer deploy tomará varios minutos.
 
 Tu API estará disponible en: `https://examia-backend.onrender.com`
 
+### 6. Configurar Keep-Alive (Evitar Sleep)
+
+Render en el plan gratuito pone en "sleep" las instancias después de **15 minutos de inactividad**, lo que causa delays de ~50 segundos en la primera request después del sleep.
+
+Para evitar esto, el backend incluye un **KeepAliveScheduler** que hace pings automáticos cada 14 minutos.
+
+#### Activar Keep-Alive en Render
+
+Agrega estas variables de entorno en Render:
+
+| Variable | Valor |
+|----------|-------|
+| `KEEP_ALIVE_ENABLED` | `true` |
+| `KEEP_ALIVE_URL` | `https://examia-backend-tzwg.onrender.com` |
+
+El scheduler hará un ping al endpoint `/actuator/health` cada 14 minutos para mantener la instancia activa.
+
+> **Nota**: Para entornos locales, el keep-alive está deshabilitado por defecto (`KEEP_ALIVE_ENABLED=false`).
+
 ## 🔐 Autenticación JWT
 
 Este proyecto utiliza **JWT (JSON Web Token)** para la autenticación de usuarios. JWT es un estándar abierto (RFC 7519) que permite transmitir información de forma segura entre partes como un objeto JSON.

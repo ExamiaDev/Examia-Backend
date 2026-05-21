@@ -50,5 +50,8 @@ management:
   endpoint:
     health:
       show-details: always
+  health:
+    mail:
+      enabled: false  # Disable mail health check to prevent timeout on Render
 
 

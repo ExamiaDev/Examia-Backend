@@ -55,9 +55,10 @@ class AuthControllerTest {
         when(authService.register(any(RegisterRequest.class)))
                 .thenThrow(new UserAlreadyExistsException("Ya existe un usuario con el email 'nuevo@ejemplo.com'"));
 
+        RegisterRequest request = validRegisterRequest();
         UserAlreadyExistsException exception = assertThrows(
                 UserAlreadyExistsException.class,
-                () -> controller.register(validRegisterRequest())
+                () -> controller.register(request)
         );
 
         assertTrue(exception.getMessage().contains("Ya existe un usuario"));
@@ -68,9 +69,10 @@ class AuthControllerTest {
         when(authService.register(any(RegisterRequest.class)))
                 .thenThrow(new UserAlreadyExistsException("Ya existe un usuario con el nombre de usuario 'juanperez'"));
 
+        RegisterRequest request = validRegisterRequest();
         UserAlreadyExistsException exception = assertThrows(
                 UserAlreadyExistsException.class,
-                () -> controller.register(validRegisterRequest())
+                () -> controller.register(request)
         );
 
         assertTrue(exception.getMessage().contains("nombre de usuario"));
@@ -169,9 +171,10 @@ class AuthControllerTest {
         when(authService.loginUade(any(LoginUadeRequest.class)))
                 .thenThrow(new InvalidCredentialsException("El email no coincide con el legajo"));
 
+        LoginUadeRequest request = validLoginUadeRequest();
         InvalidCredentialsException exception = assertThrows(
                 InvalidCredentialsException.class,
-                () -> controller.loginUade(validLoginUadeRequest())
+                () -> controller.loginUade(request)
         );
 
         assertTrue(exception.getMessage().contains("email"));
@@ -183,9 +186,10 @@ class AuthControllerTest {
         when(authService.loginUade(any(LoginUadeRequest.class)))
                 .thenThrow(exception);
 
+        LoginUadeRequest request = validLoginUadeRequest();
         UserNotFoundException thrownException = assertThrows(
                 UserNotFoundException.class,
-                () -> controller.loginUade(validLoginUadeRequest())
+                () -> controller.loginUade(request)
         );
 
         assertEquals("Legajo no encontrado", thrownException.getMessage());
@@ -196,9 +200,10 @@ class AuthControllerTest {
         when(authService.loginUade(any(LoginUadeRequest.class)))
                 .thenThrow(new InvalidCredentialsException("La contraseña es incorrecta"));
 
+        LoginUadeRequest request = validLoginUadeRequest();
         InvalidCredentialsException exception = assertThrows(
                 InvalidCredentialsException.class,
-                () -> controller.loginUade(validLoginUadeRequest())
+                () -> controller.loginUade(request)
         );
 
         assertTrue(exception.getMessage().contains("contraseña"));

@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class PasswordResetService {
 
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -99,8 +101,7 @@ public class PasswordResetService {
     }
 
     private String generateCode() {
-        SecureRandom random = new SecureRandom();
-        int number = random.nextInt(900000) + 100000;
+        int number = RANDOM.nextInt(900000) + 100000;
         return String.valueOf(number);
     }
 

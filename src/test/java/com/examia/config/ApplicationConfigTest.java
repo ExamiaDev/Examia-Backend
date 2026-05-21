@@ -4,6 +4,10 @@ import com.examia.model.Role;
 import com.examia.model.User;
 import com.examia.repository.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -57,5 +61,31 @@ class ApplicationConfigTest {
         ApplicationConfig config = new ApplicationConfig(userRepository);
 
         assertInstanceOf(BCryptPasswordEncoder.class, config.passwordEncoder());
+    }
+
+    @Test
+    void authenticationProviderShouldReturnDaoAuthenticationProvider() {
+        UserRepository userRepository = mock(UserRepository.class);
+        ApplicationConfig config = new ApplicationConfig(userRepository);
+
+        AuthenticationProvider provider = config.authenticationProvider();
+
+        assertNotNull(provider);
+        assertInstanceOf(DaoAuthenticationProvider.class, provider);
+    }
+
+    @Test
+    void authenticationManagerShouldReturnFromConfiguration() throws Exception {
+        UserRepository userRepository = mock(UserRepository.class);
+        ApplicationConfig config = new ApplicationConfig(userRepository);
+        AuthenticationConfiguration authConfig = mock(AuthenticationConfiguration.class);
+        AuthenticationManager mockManager = mock(AuthenticationManager.class);
+
+        when(authConfig.getAuthenticationManager()).thenReturn(mockManager);
+
+        AuthenticationManager manager = config.authenticationManager(authConfig);
+
+        assertNotNull(manager);
+        assertEquals(mockManager, manager);
     }
 }

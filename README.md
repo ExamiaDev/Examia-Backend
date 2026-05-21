@@ -178,7 +178,71 @@ O ingresar sin necesidad de correrlo localmente a
 
 ### Autenticación
 
-> **Nota**: Los usuarios son cargados directamente en la base de datos por un administrador. No hay endpoint de registro público.
+#### Registrar Usuario Externo
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "username": "juanperez",
+    "email": "juan@ejemplo.com",
+    "recoveryEmail": "juan.recovery@gmail.com",
+    "password": "miPassword123"
+}
+```
+
+> **Nota**: El campo `recoveryEmail` es opcional. Si no se proporciona, se usará el email principal.
+
+**Respuesta exitosa (201 Created):**
+```json
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "email": "juan@ejemplo.com",
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "role": "ALUMNO",
+    "message": "Registro exitoso"
+}
+```
+
+**Error - Email ya registrado (409 Conflict):**
+```json
+{
+    "status": 409,
+    "error": "Conflict",
+    "message": "Ya existe un usuario con el email 'juan@ejemplo.com'",
+    "timestamp": "2026-05-20T10:30:00",
+    "path": "/api/auth/register"
+}
+```
+
+**Error - Username ya en uso (409 Conflict):**
+```json
+{
+    "status": 409,
+    "error": "Conflict",
+    "message": "Ya existe un usuario con el nombre de usuario 'juanperez'",
+    "timestamp": "2026-05-20T10:30:00",
+    "path": "/api/auth/register"
+}
+```
+
+**Error - Validación fallida (400 Bad Request):**
+```json
+{
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Error de validación",
+    "errors": {
+        "nombre": "El nombre es obligatorio",
+        "email": "El formato del mail principal no es válido"
+    },
+    "timestamp": "2026-05-20T10:30:00",
+    "path": "/api/auth/register"
+}
+```
 
 #### Iniciar Sesión
 ```http
@@ -222,6 +286,65 @@ Content-Type: application/json
     "message": "La contraseña es incorrecta para el usuario 'usuario@ejemplo.com'",
     "timestamp": "2024-01-15T10:30:00",
     "path": "/api/auth/login"
+}
+```
+
+#### Iniciar Sesión UADE
+```http
+POST /api/auth/login-uade
+Content-Type: application/json
+
+{
+    "legajo": "123456",
+    "email": "usuario@uade.edu.ar",
+    "password": "miPassword123"
+}
+```
+
+> **Nota**: Este endpoint permite que estudiantes UADE se autentiquen usando su legajo, email y contraseña. El legajo es un identificador único del estudiante en UADE.
+
+**Respuesta exitosa (200 OK):**
+```json
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "email": "usuario@uade.edu.ar",
+    "nombre": "Juan",
+    "apellido": "Rodriguez",
+    "role": "ALUMNO",
+    "message": "Inicio de sesión exitoso"
+}
+```
+
+**Error - Legajo no encontrado (404 Not Found):**
+```json
+{
+    "status": 404,
+    "error": "Not Found",
+    "message": "No existe un usuario con el legajo '123456'",
+    "timestamp": "2024-01-15T10:30:00",
+    "path": "/api/auth/login-uade"
+}
+```
+
+**Error - Email no coincide (401 Unauthorized):**
+```json
+{
+    "status": 401,
+    "error": "Unauthorized",
+    "message": "El email no coincide con el legajo '123456'",
+    "timestamp": "2024-01-15T10:30:00",
+    "path": "/api/auth/login-uade"
+}
+```
+
+**Error - Contraseña incorrecta (401 Unauthorized):**
+```json
+{
+    "status": 401,
+    "error": "Unauthorized",
+    "message": "La contraseña es incorrecta para el usuario con legajo '123456'",
+    "timestamp": "2024-01-15T10:30:00",
+    "path": "/api/auth/login-uade"
 }
 ```
 
@@ -463,7 +586,8 @@ const exams = await axios.get('/api/exams');
 | Endpoint | Acceso | Descripción |
 |----------|--------|-------------|
 | `POST /api/auth/register` | 🌐 Público | Registro de usuarios |
-| `POST /api/auth/login` | 🌐 Público | Inicio de sesión |
+| `POST /api/auth/login` | 🌐 Público | Inicio de sesión (email + password) |
+| `POST /api/auth/login-uade` | 🌐 Público | Inicio de sesión UADE (legajo + email + password) |
 | `GET /api/auth/health` | 🌐 Público | Health check |
 | `GET /actuator/health` | 🌐 Público | Health check (Actuator) |
 | `*` (resto) | 🔒 Protegido | Requiere token JWT válido |
@@ -483,31 +607,65 @@ Para ver el contenido de un token durante desarrollo, puedes usar:
 .
 ├── .github/
 │   └── workflows/
-│       ├── build.yml
-│       ├── ci.yml
-│       ├── release.yml
-│       ├── validate-pr.yml
-│       └── backport.yml
+│       ├── build.yml              # Build y tests automáticos
+│       ├── ci.yml                 # Integración continua
+│       ├── release.yml            # Pipeline de releases
+│       ├── validate-pr.yml        # Validación de Pull Requests
+│       └── backport.yml           # Backports automáticos
+│
 ├── src/
 │   ├── main/
 │   │   ├── java/com/examia/
+│   │   │   ├── ExamiaApplication.java      # Clase principal
+│   │   │   │
 │   │   │   ├── config/
+│   │   │   │   ├── ApplicationConfig.java # Configuración de beans
+│   │   │   │   ├── MongoConfig.java       # Configuración MongoDB
+│   │   │   │   ├── OpenApiConfig.java     # Configuración Swagger/OpenAPI
+│   │   │   │   └── SecurityConfig.java    # Configuración Spring Security
+│   │   │   │
 │   │   │   ├── controller/
+│   │   │   │   └── AuthController.java    # Endpoints de autenticación
+│   │   │   │
 │   │   │   ├── dto/
+│   │   │   │   ├── AuthResponse.java
+│   │   │   │   ├── ErrorResponse.java
+│   │   │   │   ├── LoginRequest.java
+│   │   │   │   ├── LoginUadeRequest.java
+│   │   │   │   └── RegisterRequest.java
+│   │   │   │
 │   │   │   ├── exception/
+│   │   │   │   ├── GlobalExceptionHandler.java
+│   │   │   │   ├── InvalidCredentialsException.java
+│   │   │   │   ├── UserAlreadyExistsException.java
+│   │   │   │   └── UserNotFoundException.java
+│   │   │   │
 │   │   │   ├── model/
+│   │   │   │   ├── Role.java              # Enum de roles
+│   │   │   │   └── User.java              # Entidad usuario
+│   │   │   │
 │   │   │   ├── repository/
+│   │   │   │   └── UserRepository.java    # Repositorio MongoDB
+│   │   │   │
 │   │   │   ├── security/
+│   │   │   │   └── JwtAuthenticationFilter.java
+│   │   │   │
 │   │   │   └── service/
+│   │   │       ├── AuthService.java       # Lógica autenticación
+│   │   │       └── JwtService.java        # Manejo JWT
+│   │   │
 │   │   └── resources/
-│   └── test/
-├── postman/
-├── application.yml.example
-├── build.gradle
-├── settings.gradle
-├── Dockerfile
-├── package.json
-└── README.md
+│   │       └── application.yml            # Configuración principal
+│   │
+│   └── test/                              # Tests unitarios/integración
+│
+├── postman/                               # Colecciones Postman
+├── application.yml.example               # Variables ejemplo
+├── build.gradle                          # Dependencias Gradle
+├── settings.gradle                       # Configuración Gradle
+├── Dockerfile                            # Containerización Docker
+├── package.json                          # Scripts auxiliares
+└── README.md                             # Documentación proyecto
 ```
 
 ### Contenido clave

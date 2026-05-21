@@ -2,9 +2,12 @@ package com.examia.controller;
 
 import com.examia.dto.AuthResponse;
 import com.examia.dto.LoginRequest;
+import com.examia.dto.LoginUadeRequest;
+import com.examia.dto.RegisterRequest;
 import com.examia.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +33,12 @@ public class AuthController {
      * @param request datos del login (email, password)
      * @return AuthResponse con token JWT y datos del usuario
      */
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        AuthResponse response = authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
@@ -37,10 +46,24 @@ public class AuthController {
     }
 
     /**
+     * Autentica un usuario UADE usando legajo, email y contraseña.
+     *
+     * POST /api/auth/login-uade
+     *
+     * @param request datos del login UADE (legajo, email, password)
+     * @return AuthResponse con token JWT y datos del usuario
+     */
+    @PostMapping("/login-uade")
+    public ResponseEntity<AuthResponse> loginUade(@Valid @RequestBody LoginUadeRequest request) {
+        AuthResponse response = authService.loginUade(request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Endpoint de verificación de estado del servicio de auth.
-     *
+
      * GET /api/auth/health
-     *
+
      * @return mensaje de estado
      */
     @GetMapping("/health")

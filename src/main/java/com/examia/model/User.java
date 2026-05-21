@@ -39,6 +39,14 @@ public class User implements UserDetails {
 
     private String apellido;
 
+    @Indexed(unique = true, sparse = true)
+    private String username;
+
+    @Indexed(unique = true, sparse = true)
+    private String legajo;
+
+    private String recoveryEmail;
+
     private Role role;
 
     @CreatedDate
@@ -53,7 +61,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return username;
     }
 
     @Override

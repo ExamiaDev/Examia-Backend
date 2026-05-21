@@ -2,7 +2,10 @@ package com.examia.service;
 
 import com.examia.dto.AuthResponse;
 import com.examia.dto.LoginRequest;
+import com.examia.dto.LoginUadeRequest;
+import com.examia.dto.RegisterRequest;
 import com.examia.exception.InvalidCredentialsException;
+import com.examia.exception.UserAlreadyExistsException;
 import com.examia.exception.UserNotFoundException;
 import com.examia.model.Role;
 import com.examia.model.User;
@@ -24,6 +27,7 @@ class AuthServiceTest {
     private StubJwtService jwtService;
     private AuthService authService;
     private LoginRequest loginRequest;
+    private RegisterRequest registerRequest;
 
     @BeforeEach
     void setUp() {
@@ -36,7 +40,106 @@ class AuthServiceTest {
                 .email("usuario@ejemplo.com")
                 .password("miPassword123")
                 .build();
+
+        registerRequest = RegisterRequest.builder()
+                .nombre("Juan")
+                .apellido("Perez")
+                .username("juanperez")
+                .email("nuevo@ejemplo.com")
+                .recoveryEmail("recovery@ejemplo.com")
+                .password("password123")
+                .build();
     }
+
+    // ==================== TESTS DE REGISTRO ====================
+
+    @Test
+    void registerWhenValidRequestShouldReturnAuthResponse() {
+        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
+        when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(false);
+        when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn(ENCODED_PASSWORD);
+
+        User savedUser = User.builder()
+                .id("123")
+                .nombre(registerRequest.getNombre())
+                .apellido(registerRequest.getApellido())
+                .username(registerRequest.getUsername())
+                .email(registerRequest.getEmail())
+                .recoveryEmail(registerRequest.getRecoveryEmail())
+                .password(ENCODED_PASSWORD)
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        jwtService.setToken("token-register");
+
+        AuthResponse response = authService.register(registerRequest);
+
+        assertEquals("token-register", response.getToken());
+        assertEquals(registerRequest.getEmail(), response.getEmail());
+        assertEquals(registerRequest.getNombre(), response.getNombre());
+        assertEquals(registerRequest.getApellido(), response.getApellido());
+        assertEquals(Role.ALUMNO, response.getRole());
+        assertEquals("Registro exitoso", response.getMessage());
+    }
+
+    @Test
+    void registerWhenEmailAlreadyExistsShouldThrowUserAlreadyExistsException() {
+        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(true);
+
+        UserAlreadyExistsException exception = assertThrows(
+                UserAlreadyExistsException.class,
+                () -> authService.register(registerRequest)
+        );
+
+        assertTrue(exception.getMessage().contains(registerRequest.getEmail()));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void registerWhenUsernameAlreadyExistsShouldThrowUserAlreadyExistsException() {
+        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
+        when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(true);
+
+        UserAlreadyExistsException exception = assertThrows(
+                UserAlreadyExistsException.class,
+                () -> authService.register(registerRequest)
+        );
+
+        assertTrue(exception.getMessage().contains(registerRequest.getUsername()));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void registerWhenNoRecoveryEmailShouldUseMainEmail() {
+        RegisterRequest requestWithoutRecovery = RegisterRequest.builder()
+                .nombre("Juan")
+                .apellido("Perez")
+                .username("juanperez")
+                .email("nuevo@ejemplo.com")
+                .password("password123")
+                .build();
+
+        when(userRepository.existsByEmail(requestWithoutRecovery.getEmail())).thenReturn(false);
+        when(userRepository.existsByUsername(requestWithoutRecovery.getUsername())).thenReturn(false);
+        when(passwordEncoder.encode(requestWithoutRecovery.getPassword())).thenReturn(ENCODED_PASSWORD);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            assertEquals(requestWithoutRecovery.getEmail(), user.getRecoveryEmail());
+            return user;
+        });
+        jwtService.setToken("token-no-recovery");
+
+        AuthResponse response = authService.register(requestWithoutRecovery);
+
+        assertNotNull(response);
+        verify(userRepository).save(argThat(user ->
+            user.getRecoveryEmail().equals(requestWithoutRecovery.getEmail())
+        ));
+    }
+
+    // ==================== TESTS DE LOGIN ====================
 
     @Test
     void loginWhenCredentialsAreValidShouldReturnAuthResponse() {
@@ -116,7 +219,170 @@ class AuthServiceTest {
                 () -> authService.login(loginRequest)
         );
 
-        assertEquals("La cuenta est\u00e1 deshabilitada", exception.getMessage());
+        assertEquals("La cuenta está deshabilitada", exception.getMessage());
+    }
+
+    // ==================== TESTS DE LOGIN UADE ====================
+
+    @Test
+    void loginUadeWhenCredentialsAreValidShouldReturnAuthResponse() {
+        LoginUadeRequest loginUadeRequest = LoginUadeRequest.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password("miPassword123")
+                .build();
+
+        User existingUser = User.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password(ENCODED_PASSWORD)
+                .nombre("Juan")
+                .apellido("Rodriguez")
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches(loginUadeRequest.getPassword(), existingUser.getPassword())).thenReturn(true);
+        jwtService.setToken("token-uade");
+
+        AuthResponse response = authService.loginUade(loginUadeRequest);
+
+        assertEquals("token-uade", response.getToken());
+        assertEquals(existingUser.getEmail(), response.getEmail());
+        assertEquals(existingUser.getNombre(), response.getNombre());
+        assertEquals(existingUser.getApellido(), response.getApellido());
+        assertEquals(existingUser.getRole(), response.getRole());
+        assertEquals("Inicio de sesión exitoso", response.getMessage());
+    }
+
+    @Test
+    void loginUadeWhenLegajoNotFoundShouldThrowUserNotFoundException() {
+        LoginUadeRequest loginUadeRequest = LoginUadeRequest.builder()
+                .legajo("999999")
+                .email("usuario@uade.edu.ar")
+                .password("miPassword123")
+                .build();
+
+        when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.empty());
+
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> authService.loginUade(loginUadeRequest)
+        );
+
+        assertTrue(exception.getMessage().contains("999999"));
+    }
+
+    @Test
+    void loginUadeWhenEmailDoesNotMatchShouldThrowInvalidCredentialsException() {
+        LoginUadeRequest loginUadeRequest = LoginUadeRequest.builder()
+                .legajo("123456")
+                .email("wrong@uade.edu.ar")
+                .password("miPassword123")
+                .build();
+
+        User existingUser = User.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password(ENCODED_PASSWORD)
+                .nombre("Juan")
+                .apellido("Rodriguez")
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.of(existingUser));
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> authService.loginUade(loginUadeRequest)
+        );
+
+        assertTrue(exception.getMessage().contains("email"));
+    }
+
+    @Test
+    void loginUadeWhenPasswordIsIncorrectShouldThrowInvalidCredentialsException() {
+        LoginUadeRequest loginUadeRequest = LoginUadeRequest.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password("wrongPassword")
+                .build();
+
+        User existingUser = User.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password(ENCODED_PASSWORD)
+                .nombre("Juan")
+                .apellido("Rodriguez")
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches(loginUadeRequest.getPassword(), existingUser.getPassword())).thenReturn(false);
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> authService.loginUade(loginUadeRequest)
+        );
+
+        assertTrue(exception.getMessage().contains("contraseña"));
+    }
+
+    @Test
+    void loginUadeWhenUserIsDisabledShouldThrowInvalidCredentialsException() {
+        LoginUadeRequest loginUadeRequest = LoginUadeRequest.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password("miPassword123")
+                .build();
+
+        User existingUser = User.builder()
+                .legajo("123456")
+                .email("usuario@uade.edu.ar")
+                .password(ENCODED_PASSWORD)
+                .nombre("Juan")
+                .apellido("Rodriguez")
+                .role(Role.ALUMNO)
+                .enabled(false)
+                .build();
+
+        when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches(loginUadeRequest.getPassword(), existingUser.getPassword())).thenReturn(true);
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> authService.loginUade(loginUadeRequest)
+        );
+
+        assertEquals("La cuenta está deshabilitada", exception.getMessage());
+    }
+
+    @Test
+    void registerWhenVerifyUserSavedCalled() {
+        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
+        when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(false);
+        when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn(ENCODED_PASSWORD);
+
+        User expectedUser = User.builder()
+                .nombre(registerRequest.getNombre())
+                .apellido(registerRequest.getApellido())
+                .username(registerRequest.getUsername())
+                .email(registerRequest.getEmail())
+                .recoveryEmail(registerRequest.getRecoveryEmail())
+                .password(ENCODED_PASSWORD)
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        when(userRepository.save(any(User.class))).thenReturn(expectedUser);
+        jwtService.setToken("register-token");
+
+        authService.register(registerRequest);
+
+        verify(userRepository).save(any(User.class));
     }
 
     private static class StubJwtService extends JwtService {

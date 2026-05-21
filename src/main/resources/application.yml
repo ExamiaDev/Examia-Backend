@@ -54,4 +54,11 @@ management:
     mail:
       enabled: false  # Disable mail health check to prevent timeout on Render
 
+# Keep-alive configuration for Render free tier
+# Renders free instances go to sleep after 15 minutes of inactivity
+keep-alive:
+  enabled: ${KEEP_ALIVE_ENABLED:false}  # Enable in production on Render
+  url: ${KEEP_ALIVE_URL:}  # Set to your Render URL, e.g., https://examia-backend.onrender.com
+  interval: ${KEEP_ALIVE_INTERVAL:840000}  # 14 minutes in milliseconds (less than Render's 15 min timeout)
+
 

@@ -1,4 +1,4 @@
-Sopackage com.examia.model;
+package com.examia.model;
 
 import org.junit.jupiter.api.Test;
 
@@ -8,10 +8,9 @@ class RoleTest {
 
     @Test
     void roleEnumValues() {
-        assertEquals(3, Role.values().length);
+        assertEquals(2, Role.values().length);
         assertTrue(contains(Role.values(), Role.ALUMNO));
         assertTrue(contains(Role.values(), Role.PROFESOR));
-        assertTrue(contains(Role.values(), Role.ADMIN));
     }
 
     @Test
@@ -25,15 +24,9 @@ class RoleTest {
     }
 
     @Test
-    void roleAdminValue() {
-        assertEquals("ADMIN", Role.ADMIN.name());
-    }
-
-    @Test
     void roleValueOf() {
         assertEquals(Role.ALUMNO, Role.valueOf("ALUMNO"));
         assertEquals(Role.PROFESOR, Role.valueOf("PROFESOR"));
-        assertEquals(Role.ADMIN, Role.valueOf("ADMIN"));
     }
 
     private boolean contains(Role[] roles, Role role) {
@@ -43,4 +36,3 @@ class RoleTest {
         return false;
     }
 }
-

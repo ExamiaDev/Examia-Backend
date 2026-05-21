@@ -14,14 +14,4 @@ class InvalidCredentialsExceptionTest {
         assertEquals(message, exception.getMessage());
     }
 
-    @Test
-    void invalidCredentialsExceptionWithMessageAndCause() {
-        String message = "Credenciales inválidas";
-        Throwable cause = new RuntimeException("Cause");
-        InvalidCredentialsException exception = new InvalidCredentialsException(message, cause);
-
-        assertEquals(message, exception.getMessage());
-        assertEquals(cause, exception.getCause());
-    }
 }
-

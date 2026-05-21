@@ -8,9 +8,8 @@ class ForgotPasswordRequestTest {
 
     @Test
     void forgotPasswordRequestBuilderAndGetters() {
-        ForgotPasswordRequest request = ForgotPasswordRequest.builder()
-                .email("test@ejemplo.com")
-                .build();
+        ForgotPasswordRequest request = new ForgotPasswordRequest();
+        request.setEmail("test@ejemplo.com");
 
         assertEquals("test@ejemplo.com", request.getEmail());
     }
@@ -29,4 +28,3 @@ class ForgotPasswordRequestTest {
         assertEquals("nuevo@ejemplo.com", request.getEmail());
     }
 }
-

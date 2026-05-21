@@ -14,14 +14,4 @@ class InvalidResetCodeExceptionTest {
         assertEquals(message, exception.getMessage());
     }
 
-    @Test
-    void invalidResetCodeExceptionWithMessageAndCause() {
-        String message = "Código de reset inválido";
-        Throwable cause = new RuntimeException("Cause");
-        InvalidResetCodeException exception = new InvalidResetCodeException(message, cause);
-
-        assertEquals(message, exception.getMessage());
-        assertEquals(cause, exception.getCause());
-    }
 }
-

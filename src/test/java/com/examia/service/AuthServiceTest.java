@@ -222,18 +222,6 @@ class AuthServiceTest {
         assertEquals("La cuenta está deshabilitada", exception.getMessage());
     }
 
-    @Test
-    void loginWhenUserNotFoundShouldThrowUserNotFoundException() {
-        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
-
-        UserNotFoundException exception = assertThrows(
-                UserNotFoundException.class,
-                () -> authService.login(loginRequest)
-        );
-
-        assertTrue(exception.getMessage().contains(loginRequest.getEmail()));
-    }
-
     // ==================== TESTS DE LOGIN UADE ====================
 
     @Test

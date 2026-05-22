@@ -56,14 +56,14 @@ class AuthServiceTest {
     @Test
     void registerWhenValidRequestShouldReturnAuthResponse() {
         when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
-        when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(false);
+        when(userRepository.existsByDisplayUsername(registerRequest.getUsername())).thenReturn(false);
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn(ENCODED_PASSWORD);
 
         User savedUser = User.builder()
                 .id("123")
                 .nombre(registerRequest.getNombre())
                 .apellido(registerRequest.getApellido())
-                .username(registerRequest.getUsername())
+                .displayUsername(registerRequest.getUsername())
                 .email(registerRequest.getEmail())
                 .recoveryEmail(registerRequest.getRecoveryEmail())
                 .password(ENCODED_PASSWORD)
@@ -100,7 +100,7 @@ class AuthServiceTest {
     @Test
     void registerWhenUsernameAlreadyExistsShouldThrowUserAlreadyExistsException() {
         when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
-        when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(true);
+        when(userRepository.existsByDisplayUsername(registerRequest.getUsername())).thenReturn(true);
 
         UserAlreadyExistsException exception = assertThrows(
                 UserAlreadyExistsException.class,
@@ -122,7 +122,7 @@ class AuthServiceTest {
                 .build();
 
         when(userRepository.existsByEmail(requestWithoutRecovery.getEmail())).thenReturn(false);
-        when(userRepository.existsByUsername(requestWithoutRecovery.getUsername())).thenReturn(false);
+        when(userRepository.existsByDisplayUsername(requestWithoutRecovery.getUsername())).thenReturn(false);
         when(passwordEncoder.encode(requestWithoutRecovery.getPassword())).thenReturn(ENCODED_PASSWORD);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User user = invocation.getArgument(0);
@@ -363,13 +363,13 @@ class AuthServiceTest {
     @Test
     void registerWhenVerifyUserSavedCalled() {
         when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
-        when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(false);
+        when(userRepository.existsByDisplayUsername(registerRequest.getUsername())).thenReturn(false);
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn(ENCODED_PASSWORD);
 
         User expectedUser = User.builder()
                 .nombre(registerRequest.getNombre())
                 .apellido(registerRequest.getApellido())
-                .username(registerRequest.getUsername())
+                .displayUsername(registerRequest.getUsername())
                 .email(registerRequest.getEmail())
                 .recoveryEmail(registerRequest.getRecoveryEmail())
                 .password(ENCODED_PASSWORD)

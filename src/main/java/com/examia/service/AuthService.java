@@ -44,7 +44,7 @@ public class AuthService {
                     "Ya existe un usuario con el email '" + request.getEmail() + "'"
             );
         }
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByDisplayUsername(request.getUsername())) {
             throw new UserAlreadyExistsException(
                     "Ya existe un usuario con el nombre de usuario '" + request.getUsername() + "'"
             );
@@ -58,7 +58,7 @@ public class AuthService {
         User user = User.builder()
                 .nombre(request.getNombre())
                 .apellido(request.getApellido())
-                .username(request.getUsername())
+                .displayUsername(request.getUsername())
                 .email(request.getEmail())
                 .recoveryEmail(recoveryEmail)
                 .password(passwordEncoder.encode(request.getPassword()))

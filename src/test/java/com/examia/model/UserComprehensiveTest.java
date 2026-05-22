@@ -17,7 +17,7 @@ class UserComprehensiveTest {
                 .password("encoded-password")
                 .nombre("Juan")
                 .apellido("Perez")
-                .username("juanperez")
+                .displayUsername("juanperez")
                 .legajo("456789")
                 .recoveryEmail("recovery@ejemplo.com")
                 .role(Role.ALUMNO)
@@ -94,7 +94,7 @@ class UserComprehensiveTest {
         user.setPassword("new-password");
         user.setNombre("Pedro");
         user.setApellido("Lopez");
-        user.setUsername("pedrolopez");
+        user.setDisplayUsername("pedrolopez");
         user.setLegajo("123456");
         user.setRecoveryEmail("recovery@nuevo.com");
         user.setRole(Role.DOCENTE);

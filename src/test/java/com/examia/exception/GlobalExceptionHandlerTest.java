@@ -102,10 +102,12 @@ class GlobalExceptionHandlerTest {
         assertEquals(400, body.get("status"));
         assertEquals("Bad Request", body.get("error"));
         assertEquals("Error de validación", body.get("message"));
-        assertNotNull(body.get("errors"));
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> errors = (Map<String, String>) body.get("errors");
+        Object errorsObj = body.get("errors");
+        assertNotNull(errorsObj);
+        assertInstanceOf(Map.class, errorsObj);
+
+        Map<?, ?> errors = (Map<?, ?>) errorsObj;
         assertEquals("El email es obligatorio", errors.get("email"));
         assertEquals("La contraseña es obligatoria", errors.get("password"));
     }

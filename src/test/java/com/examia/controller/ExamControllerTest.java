@@ -3,8 +3,6 @@ package com.examia.controller;
 import com.examia.dto.*;
 import com.examia.model.Question;
 import com.examia.model.QuestionType;
-import com.examia.model.Role;
-import com.examia.model.User;
 import com.examia.service.ExamService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -43,10 +41,7 @@ class ExamControllerTest {
     private ExamController examController;
 
     private ObjectMapper objectMapper;
-    private User professor;
-    private User student;
     private CreateExamRequest createExamRequest;
-    private UpdateExamRequest updateExamRequest;
     private ExamResponse examResponse;
     private ExamSummaryResponse examSummaryResponse;
 
@@ -56,23 +51,6 @@ class ExamControllerTest {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
 
-        professor = User.builder()
-                .id("prof-123")
-                .email("profesor@test.com")
-                .nombre("Juan")
-                .apellido("Pérez")
-                .role(Role.DOCENTE)
-                .enabled(true)
-                .build();
-
-        student = User.builder()
-                .id("student-123")
-                .email("alumno@test.com")
-                .nombre("María")
-                .apellido("García")
-                .role(Role.ALUMNO)
-                .enabled(true)
-                .build();
 
         QuestionRequest questionRequest = QuestionRequest.builder()
                 .type(QuestionType.MULTIPLE_CHOICE)
@@ -91,11 +69,6 @@ class ExamControllerTest {
                 .durationMinutes(60)
                 .passingScore(60.0)
                 .published(false)
-                .build();
-
-        updateExamRequest = UpdateExamRequest.builder()
-                .title("Examen de Geografía Actualizado")
-                .description("Nueva descripción")
                 .build();
 
         Question question = Question.builder()

@@ -41,7 +41,7 @@ class UserTest {
                 .password("password123")
                 .nombre("Juan")
                 .apellido("Perez")
-                .username("juanperez")
+                .displayUsername("juanperez")
                 .legajo("12345")
                 .recoveryEmail("recovery@ejemplo.com")
                 .role(Role.ALUMNO)
@@ -71,7 +71,7 @@ class UserTest {
         user.setPassword("newpassword");
         user.setNombre("Maria");
         user.setApellido("Garcia");
-        user.setUsername("mariagarcia");
+        user.setDisplayUsername("mariagarcia");
         user.setLegajo("67890");
         user.setRecoveryEmail("newrecovery@ejemplo.com");
         user.setRole(Role.DOCENTE);

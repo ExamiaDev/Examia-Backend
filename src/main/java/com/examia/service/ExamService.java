@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Servicio para la gestión de exámenes.
@@ -23,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ExamService {
 
+    private static final String EXAM_NOT_FOUND_MESSAGE = "No se encontró el examen con ID: ";
     private final ExamRepository examRepository;
 
     /**
@@ -74,7 +74,7 @@ public class ExamService {
     public ExamResponse getExam(String examId, User user) {
         Exam exam = examRepository.findByIdAndActiveTrue(examId)
                 .orElseThrow(() -> new ExamNotFoundException(
-                        "No se encontró el examen con ID: " + examId));
+                        EXAM_NOT_FOUND_MESSAGE + examId));
 
         // Si es profesor, solo puede ver sus propios exámenes
         // Si es alumno, solo puede ver exámenes publicados
@@ -105,7 +105,7 @@ public class ExamService {
         List<Exam> exams = examRepository.findByProfessorIdAndActiveTrue(professor.getId());
         return exams.stream()
                 .map(this::buildExamSummaryResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -122,7 +122,7 @@ public class ExamService {
                 professor.getId(), subjectId);
         return exams.stream()
                 .map(this::buildExamSummaryResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -135,7 +135,7 @@ public class ExamService {
         List<Exam> exams = examRepository.findBySubjectIdAndPublishedTrueAndActiveTrue(subjectId);
         return exams.stream()
                 .map(this::buildExamSummaryResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -151,7 +151,7 @@ public class ExamService {
 
         Exam exam = examRepository.findByIdAndActiveTrue(examId)
                 .orElseThrow(() -> new ExamNotFoundException(
-                        "No se encontró el examen con ID: " + examId));
+                        EXAM_NOT_FOUND_MESSAGE + examId));
 
         if (!exam.getProfessorId().equals(professor.getId())) {
             throw new UnauthorizedAccessException(
@@ -220,7 +220,7 @@ public class ExamService {
 
         Exam exam = examRepository.findByIdAndActiveTrue(examId)
                 .orElseThrow(() -> new ExamNotFoundException(
-                        "No se encontró el examen con ID: " + examId));
+                        EXAM_NOT_FOUND_MESSAGE + examId));
 
         if (!exam.getProfessorId().equals(professor.getId())) {
             throw new UnauthorizedAccessException(
@@ -246,7 +246,7 @@ public class ExamService {
 
         Exam exam = examRepository.findByIdAndActiveTrue(examId)
                 .orElseThrow(() -> new ExamNotFoundException(
-                        "No se encontró el examen con ID: " + examId));
+                        EXAM_NOT_FOUND_MESSAGE + examId));
 
         if (!exam.getProfessorId().equals(professor.getId())) {
             throw new UnauthorizedAccessException(
@@ -273,7 +273,7 @@ public class ExamService {
 
         Exam originalExam = examRepository.findByIdAndActiveTrue(examId)
                 .orElseThrow(() -> new ExamNotFoundException(
-                        "No se encontró el examen con ID: " + examId));
+                        EXAM_NOT_FOUND_MESSAGE + examId));
 
         if (!originalExam.getProfessorId().equals(professor.getId())) {
             throw new UnauthorizedAccessException(
@@ -297,7 +297,7 @@ public class ExamService {
                         .order(q.getOrder())
                         .required(q.isRequired())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
 
         Exam duplicatedExam = Exam.builder()
                 .title(originalExam.getTitle() + " (Copia)")
@@ -335,7 +335,7 @@ public class ExamService {
     private List<Question> mapQuestionsFromRequest(List<QuestionRequest> questionRequests) {
         return questionRequests.stream()
                 .map(this::mapQuestionFromRequest)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private Question mapQuestionFromRequest(QuestionRequest request) {

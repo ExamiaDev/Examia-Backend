@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.MethodParameter;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -14,11 +15,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 class GlobalExceptionHandlerTest {
 
-    private GlobalExceptionHandler handler = new GlobalExceptionHandler();
-    private MockHttpServletRequest request = new MockHttpServletRequest();
+    private GlobalExceptionHandler handler;
+    private MockHttpServletRequest request;
 
     @BeforeEach
     void setUp() {
@@ -89,7 +91,8 @@ class GlobalExceptionHandlerTest {
         bindingResult.addError(new FieldError("request", "email", "El email es obligatorio"));
         bindingResult.addError(new FieldError("request", "password", "La contraseña es obligatoria"));
 
-        MethodArgumentNotValidException ex = new MethodArgumentNotValidException(null, bindingResult);
+        MethodParameter methodParameter = mock(MethodParameter.class);
+        MethodArgumentNotValidException ex = new MethodArgumentNotValidException(methodParameter, bindingResult);
 
         ResponseEntity<Map<String, Object>> response = handler.handleValidationExceptions(ex, request);
 
@@ -99,10 +102,12 @@ class GlobalExceptionHandlerTest {
         assertEquals(400, body.get("status"));
         assertEquals("Bad Request", body.get("error"));
         assertEquals("Error de validación", body.get("message"));
-        assertNotNull(body.get("errors"));
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> errors = (Map<String, String>) body.get("errors");
+        Object errorsObj = body.get("errors");
+        assertNotNull(errorsObj);
+        assertInstanceOf(Map.class, errorsObj);
+
+        Map<?, ?> errors = (Map<?, ?>) errorsObj;
         assertEquals("El email es obligatorio", errors.get("email"));
         assertEquals("La contraseña es obligatoria", errors.get("password"));
     }

@@ -502,7 +502,7 @@ Cuando decodificas el token, el payload contiene:
 ```json
 {
   "sub": "usuario@ejemplo.com",    // Email del usuario (subject)
-  "role": "PROFESOR",              // Rol del usuario
+  "role": "DOCENTE",              // Rol del usuario
   "nombre": "Juan",                // Nombre
   "apellido": "Pérez",             // Apellido
   "iat": 1616239022,               // Fecha de emisión (issued at)

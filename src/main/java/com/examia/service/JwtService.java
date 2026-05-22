@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.function.Function;
 /**
  * Servicio para la generación y validación de tokens JWT.
  */
+@Slf4j
 @Service
 public class JwtService {
 
@@ -46,11 +48,15 @@ public class JwtService {
      * Genera un token JWT para un usuario.
      */
     public String generateToken(User user) {
+        log.info("[JwtService] Generating token for user email: {}, role: {}",
+                user.getEmail(), user.getRole());
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("role", user.getRole().name());
         extraClaims.put("nombre", user.getNombre());
         extraClaims.put("apellido", user.getApellido());
-        return generateToken(extraClaims, user);
+        String token = generateToken(extraClaims, user);
+        log.info("[JwtService] Token generated. Subject will be: {}", user.getUsername());
+        return token;
     }
 
     /**
@@ -72,11 +78,12 @@ public class JwtService {
             UserDetails userDetails,
             long expiration
     ) {
+        long now = System.currentTimeMillis();
         return Jwts.builder()
                 .claims(extraClaims)
                 .subject(userDetails.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .issuedAt(new Date(now))
+                .expiration(new Date(now + expiration))
                 .signWith(getSignInKey(), Jwts.SIG.HS256)
                 .compact();
     }

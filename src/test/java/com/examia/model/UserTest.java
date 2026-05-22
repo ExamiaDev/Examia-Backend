@@ -13,9 +13,9 @@ class UserTest {
     @Test
     void userDetailsMethodsShouldReturnConfiguredAccountStateAndAuthorities() {
         User user = User.builder()
-                .username("usuario@ejemplo.com")
+                .email("usuario@ejemplo.com")
                 .password("encoded-password")
-                .role(Role.PROFESOR)
+                .role(Role.DOCENTE)
                 .enabled(true)
                 .build();
 
@@ -28,7 +28,7 @@ class UserTest {
         assertTrue(user.isAccountNonLocked());
         assertTrue(user.isCredentialsNonExpired());
         assertTrue(authorities.stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_PROFESOR")));
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_DOCENTE")));
     }
 
     @Test
@@ -41,7 +41,7 @@ class UserTest {
                 .password("password123")
                 .nombre("Juan")
                 .apellido("Perez")
-                .username("juanperez")
+                .displayUsername("juanperez")
                 .legajo("12345")
                 .recoveryEmail("recovery@ejemplo.com")
                 .role(Role.ALUMNO)
@@ -71,10 +71,10 @@ class UserTest {
         user.setPassword("newpassword");
         user.setNombre("Maria");
         user.setApellido("Garcia");
-        user.setUsername("mariagarcia");
+        user.setDisplayUsername("mariagarcia");
         user.setLegajo("67890");
         user.setRecoveryEmail("newrecovery@ejemplo.com");
-        user.setRole(Role.PROFESOR);
+        user.setRole(Role.DOCENTE);
         user.setCreatedAt(createdAt);
         user.setEnabled(false);
 
@@ -85,7 +85,7 @@ class UserTest {
         assertEquals("Garcia", user.getApellido());
         assertEquals("67890", user.getLegajo());
         assertEquals("newrecovery@ejemplo.com", user.getRecoveryEmail());
-        assertEquals(Role.PROFESOR, user.getRole());
+        assertEquals(Role.DOCENTE, user.getRole());
         assertEquals(createdAt, user.getCreatedAt());
         assertFalse(user.isEnabled());
     }

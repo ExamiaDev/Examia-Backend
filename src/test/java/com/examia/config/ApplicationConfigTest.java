@@ -24,7 +24,7 @@ class ApplicationConfigTest {
     void userDetailsServiceWhenUserExistsShouldReturnUserDetails() {
         UserRepository userRepository = mock(UserRepository.class);
         User user = User.builder()
-                .username("usuario@ejemplo.com")
+                .email("usuario@ejemplo.com")
                 .password("encoded-password")
                 .role(Role.ALUMNO)
                 .enabled(true)

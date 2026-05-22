@@ -39,8 +39,12 @@ public class User implements UserDetails {
 
     private String apellido;
 
+    /**
+     * Nombre de usuario personalizado (distinto del email usado para autenticación).
+     * El método getUsername() de UserDetails retorna el email para Spring Security.
+     */
     @Indexed(unique = true, sparse = true)
-    private String username;
+    private String displayUsername;
 
     @Indexed(unique = true, sparse = true)
     private String legajo;
@@ -61,7 +65,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return username;
+        return email;  // Usamos email como identificador principal para Spring Security
     }
 
     @Override

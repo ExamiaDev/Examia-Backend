@@ -1,0 +1,105 @@
+package com.examia.dto;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * DTO para crear un nuevo examen.
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateExamRequest {
+
+    /**
+     * Título del examen
+     */
+    @NotBlank(message = "El título del examen es obligatorio")
+    private String title;
+
+    /**
+     * Descripción o instrucciones del examen
+     */
+    private String description;
+
+    /**
+     * ID de la materia/clase a la que pertenece el examen
+     */
+    @NotBlank(message = "El ID de la materia es obligatorio")
+    private String subjectId;
+
+    /**
+     * Nombre de la materia
+     */
+    private String subjectName;
+
+    /**
+     * Lista de preguntas del examen
+     */
+    @NotEmpty(message = "El examen debe tener al menos una pregunta")
+    @Valid
+    private List<QuestionRequest> questions;
+
+    /**
+     * Duración del examen en minutos
+     */
+    @Positive(message = "La duración debe ser positiva")
+    private Integer durationMinutes;
+
+    /**
+     * Puntaje mínimo para aprobar
+     */
+    @Positive(message = "El puntaje para aprobar debe ser positivo")
+    private Double passingScore;
+
+    /**
+     * Fecha y hora de inicio programada
+     */
+    private LocalDateTime scheduledStartTime;
+
+    /**
+     * Fecha y hora de fin programada
+     */
+    private LocalDateTime scheduledEndTime;
+
+    /**
+     * Indica si el examen está publicado
+     */
+    @Builder.Default
+    private boolean published = false;
+
+    /**
+     * Indica si las preguntas deben mostrarse en orden aleatorio
+     */
+    @Builder.Default
+    private boolean shuffleQuestions = false;
+
+    /**
+     * Indica si las opciones deben mostrarse en orden aleatorio
+     */
+    @Builder.Default
+    private boolean shuffleOptions = false;
+
+    /**
+     * Indica si se muestran los resultados al finalizar
+     */
+    @Builder.Default
+    private boolean showResultsOnCompletion = true;
+
+    /**
+     * Número máximo de intentos permitidos
+     */
+    @Positive(message = "El número de intentos debe ser positivo")
+    private Integer maxAttempts;
+}
+

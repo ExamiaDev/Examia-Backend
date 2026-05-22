@@ -31,7 +31,7 @@ class JwtServiceTest {
     void generateTokenShouldReturnValidTokenForUser() {
         User user = User.builder()
                 .email("usuario@ejemplo.com")
-                .username("usuario@ejemplo.com")
+                .displayUsername("usuario@ejemplo.com")
                 .password(USER_PASSWORD)
                 .nombre("Ana")
                 .apellido("García")
@@ -51,7 +51,7 @@ class JwtServiceTest {
     void isTokenValidShouldReturnFalseForDifferentUser() {
         User user = User.builder()
                 .email("usuario@ejemplo.com")
-                .username("usuario@ejemplo.com")
+                .displayUsername("usuario@ejemplo.com")
                 .password(USER_PASSWORD)
                 .nombre("Ana")
                 .apellido("García")
@@ -61,11 +61,11 @@ class JwtServiceTest {
 
         User otherUser = User.builder()
                 .email("otro@ejemplo.com")
-                .username("otro@ejemplo.com")
+                .displayUsername("otro@ejemplo.com")
                 .password(USER_PASSWORD)
                 .nombre("Diego")
                 .apellido("Pérez")
-                .role(Role.PROFESOR)
+                .role(Role.DOCENTE)
                 .enabled(true)
                 .build();
 

@@ -7,6 +7,7 @@ import com.examia.dto.RegisterRequest;
 import com.examia.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
  * Nota: Los usuarios son cargados directamente en la base de datos
  * por un administrador. No hay registro público.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -55,8 +57,21 @@ public class AuthController {
      */
     @PostMapping("/login-uade")
     public ResponseEntity<AuthResponse> loginUade(@Valid @RequestBody LoginUadeRequest request) {
-        AuthResponse response = authService.loginUade(request);
-        return ResponseEntity.ok(response);
+        log.info("=== LOGIN UADE REQUEST RECEIVED ===");
+        log.info("Legajo: {}, Email: {}", request.getLegajo(), request.getEmail());
+        long startTime = System.currentTimeMillis();
+
+        try {
+            log.info("Calling authService.loginUade...");
+            AuthResponse response = authService.loginUade(request);
+            long elapsed = System.currentTimeMillis() - startTime;
+            log.info("Login UADE successful. Elapsed time: {} ms", elapsed);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            long elapsed = System.currentTimeMillis() - startTime;
+            log.error("Login UADE failed after {} ms. Error: {}", elapsed, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**

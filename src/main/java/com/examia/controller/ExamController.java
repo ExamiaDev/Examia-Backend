@@ -55,6 +55,33 @@ public class ExamController {
     }
 
     /**
+     * Obtiene todos los exámenes del profesor autenticado.
+     * Si se especifica subjectId, filtra por materia.
+     *
+     * GET /api/exams
+     * GET /api/exams?subjectId=xxx
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('DOCENTE')")
+    @Operation(summary = "Obtener exámenes", description = "Obtiene todos los exámenes del profesor, opcionalmente filtrados por materia")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de exámenes"),
+        @ApiResponse(responseCode = "401", description = "No autenticado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado - Solo profesores")
+    })
+    public ResponseEntity<List<ExamSummaryResponse>> getExams(
+            @Parameter(description = "ID de la materia (opcional)") @RequestParam(required = false) String subjectId,
+            @AuthenticationPrincipal User professor) {
+        List<ExamSummaryResponse> exams;
+        if (subjectId != null && !subjectId.isEmpty()) {
+            exams = examService.getExamsByProfessorAndSubject(subjectId, professor);
+        } else {
+            exams = examService.getExamsByProfessor(professor);
+        }
+        return ResponseEntity.ok(exams);
+    }
+
+    /**
      * Obtiene un examen por su ID.
      *
      * GET /api/exams/{examId}

@@ -11,6 +11,7 @@ import com.examia.model.Role;
 import com.examia.model.User;
 import com.examia.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
  * Nota: Los usuarios son cargados directamente en la base de datos
  * por un administrador. No hay registro público.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -119,34 +121,57 @@ public class AuthService {
      * @throws InvalidCredentialsException si el email no coincide o la contraseña es incorrecta
      */
     public AuthResponse loginUade(LoginUadeRequest request) {
+        log.info("[LoginUade] Starting login for legajo: {}", request.getLegajo());
+        long step1 = System.currentTimeMillis();
+
         // Buscar el usuario por legajo
+        log.info("[LoginUade] Step 1: Finding user by legajo...");
         User user = userRepository.findByLegajo(request.getLegajo())
                 .orElseThrow(() -> new UserNotFoundException(
                         "No existe un usuario con el legajo '" + request.getLegajo() + "'"
                 ));
+        log.info("[LoginUade] Step 1 completed in {} ms. User found: {}",
+                System.currentTimeMillis() - step1, user.getEmail());
 
+        long step2 = System.currentTimeMillis();
         // Verificar que el email coincida
+        log.info("[LoginUade] Step 2: Verifying email match...");
         if (!user.getEmail().equals(request.getEmail())) {
             throw new InvalidCredentialsException(
                     "El email no coincide con el legajo '" + request.getLegajo() + "'"
             );
         }
+        log.info("[LoginUade] Step 2 completed in {} ms. Email matches.",
+                System.currentTimeMillis() - step2);
 
+        long step3 = System.currentTimeMillis();
         // Verificar la contraseña
+        log.info("[LoginUade] Step 3: Verifying password...");
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException(
                     "La contraseña es incorrecta para el usuario con legajo '" + request.getLegajo() + "'"
             );
         }
+        log.info("[LoginUade] Step 3 completed in {} ms. Password matches.",
+                System.currentTimeMillis() - step3);
 
+        long step4 = System.currentTimeMillis();
         // Verificar si el usuario está habilitado
+        log.info("[LoginUade] Step 4: Checking if user is enabled...");
         if (!user.isEnabled()) {
             throw new InvalidCredentialsException("La cuenta está deshabilitada");
         }
+        log.info("[LoginUade] Step 4 completed in {} ms. User is enabled.",
+                System.currentTimeMillis() - step4);
 
+        long step5 = System.currentTimeMillis();
         // Generar token JWT
+        log.info("[LoginUade] Step 5: Generating JWT token...");
         String token = jwtService.generateToken(user);
+        log.info("[LoginUade] Step 5 completed in {} ms. Token generated.",
+                System.currentTimeMillis() - step5);
 
+        log.info("[LoginUade] Login successful for legajo: {}", request.getLegajo());
         return AuthResponse.builder()
                 .token(token)
                 .email(user.getEmail())

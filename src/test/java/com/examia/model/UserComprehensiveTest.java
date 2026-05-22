@@ -108,7 +108,6 @@ class UserComprehensiveTest {
         // getUsername() retorna email, no el campo username (comportamiento de Spring Security)
         assertEquals("nuevo@ejemplo.com", user.getUsername());
         assertEquals("123456", user.getLegajo());
-        assertEquals("123456", user.getLegajo());
         assertEquals("recovery@nuevo.com", user.getRecoveryEmail());
         assertEquals(Role.DOCENTE, user.getRole());
         assertTrue(user.isEnabled());

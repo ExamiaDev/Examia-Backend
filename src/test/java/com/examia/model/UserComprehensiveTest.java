@@ -29,7 +29,8 @@ class UserComprehensiveTest {
         assertEquals("encoded-password", user.getPassword());
         assertEquals("Juan", user.getNombre());
         assertEquals("Perez", user.getApellido());
-        assertEquals("juanperez", user.getUsername());
+        // getUsername() retorna email para Spring Security (UserDetails interface)
+        assertEquals("test@ejemplo.com", user.getUsername());
         assertEquals("456789", user.getLegajo());
         assertEquals("recovery@ejemplo.com", user.getRecoveryEmail());
         assertEquals(Role.ALUMNO, user.getRole());
@@ -49,12 +50,13 @@ class UserComprehensiveTest {
     }
 
     @Test
-    void userGetUsernameReturnsUsername() {
+    void userGetUsernameReturnsEmail() {
         User user = User.builder()
-                .username("juanperez")
+                .email("test@ejemplo.com")
                 .build();
 
-        assertEquals("juanperez", user.getUsername());
+        // getUsername() retorna email para Spring Security (UserDetails interface)
+        assertEquals("test@ejemplo.com", user.getUsername());
     }
 
     @Test
@@ -103,7 +105,9 @@ class UserComprehensiveTest {
         assertEquals("new-password", user.getPassword());
         assertEquals("Pedro", user.getNombre());
         assertEquals("Lopez", user.getApellido());
-        assertEquals("pedrolopez", user.getUsername());
+        // getUsername() retorna email, no el campo username (comportamiento de Spring Security)
+        assertEquals("nuevo@ejemplo.com", user.getUsername());
+        assertEquals("123456", user.getLegajo());
         assertEquals("123456", user.getLegajo());
         assertEquals("recovery@nuevo.com", user.getRecoveryEmail());
         assertEquals(Role.DOCENTE, user.getRole());

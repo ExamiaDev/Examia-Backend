@@ -13,7 +13,7 @@ class UserTest {
     @Test
     void userDetailsMethodsShouldReturnConfiguredAccountStateAndAuthorities() {
         User user = User.builder()
-                .username("usuario@ejemplo.com")
+                .email("usuario@ejemplo.com")
                 .password("encoded-password")
                 .role(Role.DOCENTE)
                 .enabled(true)

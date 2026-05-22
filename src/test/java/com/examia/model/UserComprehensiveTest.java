@@ -95,7 +95,7 @@ class UserComprehensiveTest {
         user.setUsername("pedrolopez");
         user.setLegajo("123456");
         user.setRecoveryEmail("recovery@nuevo.com");
-        user.setRole(Role.PROFESOR);
+        user.setRole(Role.DOCENTE);
         user.setEnabled(true);
 
         assertEquals("789", user.getId());
@@ -106,7 +106,7 @@ class UserComprehensiveTest {
         assertEquals("pedrolopez", user.getUsername());
         assertEquals("123456", user.getLegajo());
         assertEquals("recovery@nuevo.com", user.getRecoveryEmail());
-        assertEquals(Role.PROFESOR, user.getRole());
+        assertEquals(Role.DOCENTE, user.getRole());
         assertTrue(user.isEnabled());
     }
 }

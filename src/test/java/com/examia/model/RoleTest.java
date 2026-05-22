@@ -10,7 +10,7 @@ class RoleTest {
     void roleEnumValues() {
         assertEquals(2, Role.values().length);
         assertTrue(contains(Role.values(), Role.ALUMNO));
-        assertTrue(contains(Role.values(), Role.PROFESOR));
+        assertTrue(contains(Role.values(), Role.DOCENTE));
     }
 
     @Test
@@ -20,13 +20,13 @@ class RoleTest {
 
     @Test
     void roleProfesorValue() {
-        assertEquals("PROFESOR", Role.PROFESOR.name());
+        assertEquals("DOCENTE", Role.DOCENTE.name());
     }
 
     @Test
     void roleValueOf() {
         assertEquals(Role.ALUMNO, Role.valueOf("ALUMNO"));
-        assertEquals(Role.PROFESOR, Role.valueOf("PROFESOR"));
+        assertEquals(Role.DOCENTE, Role.valueOf("DOCENTE"));
     }
 
     private boolean contains(Role[] roles, Role role) {

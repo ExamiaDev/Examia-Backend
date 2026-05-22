@@ -122,7 +122,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"email\": \"test@examia.com\",\n    \"nombre\": \"Test\",\n    \"apellido\": \"Usuario\",\n    \"role\": \"PROFESOR\",\n    \"message\": \"Inicio de sesión exitoso\"\n}"
+							"body": "{\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"email\": \"test@examia.com\",\n    \"nombre\": \"Test\",\n    \"apellido\": \"Usuario\",\n    \"role\": \"DOCENTE\",\n    \"message\": \"Inicio de sesión exitoso\"\n}"
 						},
 						{
 							"name": "Usuario no encontrado",
@@ -526,6 +526,312 @@
 						}
 					]
 				}
+		{
+			"name": "Exams",
+			"description": "Endpoints para la gestión de exámenes. Requieren autenticación.",
+			"item": [
+				{
+					"name": "Crear Examen",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Examen de Programación 1\",\n    \"description\": \"Examen parcial de introducción a la programación\",\n    \"subjectId\": \"subject-123\",\n    \"subjectName\": \"Programación 1\",\n    \"questions\": [\n        {\n            \"type\": \"MULTIPLE_CHOICE\",\n            \"text\": \"¿Cuál es el resultado de 2 + 2?\",\n            \"options\": [\"3\", \"4\", \"5\", \"6\"],\n            \"correctAnswers\": [1],\n            \"points\": 10,\n            \"explanation\": \"La suma de 2 + 2 es igual a 4\"\n        },\n        {\n            \"type\": \"TRUE_FALSE\",\n            \"text\": \"Java es un lenguaje compilado\",\n            \"options\": [\"Verdadero\", \"Falso\"],\n            \"correctAnswers\": [0],\n            \"points\": 5\n        },\n        {\n            \"type\": \"SHORT_ANSWER\",\n            \"text\": \"¿Cómo se llama el proceso de convertir código fuente a bytecode?\",\n            \"correctTextAnswer\": \"compilación\",\n            \"points\": 15\n        }\n    ],\n    \"durationMinutes\": 60,\n    \"passingScore\": 60,\n    \"published\": false,\n    \"shuffleQuestions\": true,\n    \"shuffleOptions\": true,\n    \"showResultsOnCompletion\": true,\n    \"maxAttempts\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/exams",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "exams"]
+						},
+						"description": "Crea un nuevo examen. Solo para profesores.\n\n**Tipos de preguntas disponibles:**\n- MULTIPLE_CHOICE: Opción múltiple (una respuesta)\n- MULTIPLE_SELECTION: Selección múltiple (varias respuestas)\n- TRUE_FALSE: Verdadero o Falso\n- SHORT_ANSWER: Respuesta corta\n- LONG_ANSWER: Respuesta larga/desarrollo\n- FILL_IN_THE_BLANK: Completar espacios\n- ORDERING: Ordenamiento\n- MATCHING: Relacionar/emparejar"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Examen por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/exams/:examId",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "exams", ":examId"],
+							"variable": [
+								{
+									"key": "examId",
+									"value": "exam-123"
+								}
+							]
+						},
+						"description": "Obtiene un examen por su ID.\n\n- Profesores: pueden ver sus propios exámenes\n- Alumnos: solo pueden ver exámenes publicados"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Mis Exámenes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/exams/my-exams",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "exams", "my-exams"]
+						},
+						"description": "Obtiene todos los exámenes del profesor autenticado. Solo para profesores."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Mis Exámenes por Materia",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/exams/my-exams/subject/:subjectId",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "exams", "my-exams", "subject", ":subjectId"],
+							"variable": [
+								{
+									"key": "subjectId",
+									"value": "subject-123"
+								}
+							]
+						},
+						"description": "Obtiene los exámenes del profesor para una materia específica. Solo para profesores."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Exámenes Publicados por Materia",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/exams/subject/:subjectId",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "exams", "subject", ":subjectId"],
+							"variable": [
+								{
+									"key": "subjectId",
+									"value": "subject-123"
+								}
+							]
+						},
+						"description": "Obtiene los exámenes publicados de una materia. Usado por alumnos para ver exámenes disponibles."
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Examen",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Examen de Programación 1 - Actualizado\",\n    \"description\": \"Nueva descripción del examen\",\n    \"durationMinutes\": 90,\n    \"passingScore\": 70,\n    \"published\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/exams/:examId",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "exams", ":examId"],
+							"variable": [
+								{
+									"key": "examId",
+									"value": "exam-123"
+								}
+							]
+						},
+						"description": "Actualiza un examen existente. Solo para el profesor propietario."
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Examen",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/exams/:examId",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "exams", ":examId"],
+							"variable": [
+								{
+									"key": "examId",
+									"value": "exam-123"
+								}
+							]
+						},
+						"description": "Elimina lógicamente un examen (soft delete). Solo para el profesor propietario."
+					},
+					"response": []
+				},
+				{
+					"name": "Publicar/Despublicar Examen",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"published\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/exams/:examId/publish",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "exams", ":examId", "publish"],
+							"variable": [
+								{
+									"key": "examId",
+									"value": "exam-123"
+								}
+							]
+						},
+						"description": "Cambia el estado de publicación de un examen. Solo para el profesor propietario."
+					},
+					"response": []
+				},
+				{
+					"name": "Duplicar Examen",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/exams/:examId/duplicate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "exams", ":examId", "duplicate"],
+							"variable": [
+								{
+									"key": "examId",
+									"value": "exam-123"
+								}
+							]
+						},
+						"description": "Crea una copia de un examen existente. Solo para el profesor propietario."
+					},
+					"response": []
+				}
+			]
+		},
 		{
 			"name": "Endpoints Protegidos (Ejemplo)",
 			"description": "Ejemplos de cómo usar endpoints que requieren autenticación.\n\nEstos endpoints aún no están implementados, pero muestran cómo configurar el header Authorization.",

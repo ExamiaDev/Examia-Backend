@@ -148,7 +148,7 @@ class AuthServiceTest {
                 .password(ENCODED_PASSWORD)
                 .nombre("Juan")
                 .apellido("Vega")
-                .role(Role.PROFESOR)
+                .role(Role.DOCENTE)
                 .enabled(true)
                 .build();
 
@@ -185,7 +185,7 @@ class AuthServiceTest {
                 .password(ENCODED_PASSWORD)
                 .nombre("Juan")
                 .apellido("Vega")
-                .role(Role.PROFESOR)
+                .role(Role.DOCENTE)
                 .enabled(true)
                 .build();
 
@@ -207,7 +207,7 @@ class AuthServiceTest {
                 .password(ENCODED_PASSWORD)
                 .nombre("Juan")
                 .apellido("Vega")
-                .role(Role.PROFESOR)
+                .role(Role.DOCENTE)
                 .enabled(false)
                 .build();
 

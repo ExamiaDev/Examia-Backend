@@ -65,7 +65,7 @@ class JwtServiceTest {
                 .password(USER_PASSWORD)
                 .nombre("Diego")
                 .apellido("Pérez")
-                .role(Role.PROFESOR)
+                .role(Role.DOCENTE)
                 .enabled(true)
                 .build();
 

@@ -55,6 +55,7 @@ public class ExamService {
                 .shuffleOptions(request.isShuffleOptions())
                 .showResultsOnCompletion(request.isShowResultsOnCompletion())
                 .maxAttempts(request.getMaxAttempts())
+                .shift(request.getShift())
                 .active(true)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -139,6 +140,18 @@ public class ExamService {
     }
 
     /**
+     * Obtiene todos los exámenes publicados y activos (para alumnos, sin filtro de materia).
+     *
+     * @return lista de ExamSummaryResponse
+     */
+    public List<ExamSummaryResponse> getAllPublishedExams() {
+        List<Exam> exams = examRepository.findByPublishedTrueAndActiveTrue();
+        return exams.stream()
+                .map(this::buildExamSummaryResponse)
+                .toList();
+    }
+
+    /**
      * Actualiza un examen existente.
      *
      * @param examId ID del examen a actualizar
@@ -201,6 +214,9 @@ public class ExamService {
         }
         if (request.getMaxAttempts() != null) {
             exam.setMaxAttempts(request.getMaxAttempts());
+        }
+        if (request.getShift() != null) {
+            exam.setShift(request.getShift());
         }
 
         exam.setUpdatedAt(LocalDateTime.now());
@@ -294,6 +310,8 @@ public class ExamService {
                         .points(q.getPoints())
                         .explanation(q.getExplanation())
                         .imageUrl(q.getImageUrl())
+                        .topic(q.getTopic())
+                        .topicColor(q.getTopicColor())
                         .order(q.getOrder())
                         .required(q.isRequired())
                         .build())
@@ -351,6 +369,8 @@ public class ExamService {
                 .points(request.getPoints() != null ? request.getPoints() : 1.0)
                 .explanation(request.getExplanation())
                 .imageUrl(request.getImageUrl())
+                .topic(request.getTopic())
+                .topicColor(request.getTopicColor())
                 .order(request.getOrder())
                 .required(request.isRequired())
                 .build();
@@ -376,6 +396,7 @@ public class ExamService {
                 .passingScore(exam.getPassingScore())
                 .scheduledStartTime(exam.getScheduledStartTime())
                 .scheduledEndTime(exam.getScheduledEndTime())
+                .shift(exam.getShift())
                 .published(exam.isPublished())
                 .shuffleQuestions(exam.isShuffleQuestions())
                 .shuffleOptions(exam.isShuffleOptions())
@@ -402,6 +423,7 @@ public class ExamService {
                 .passingScore(exam.getPassingScore())
                 .scheduledStartTime(exam.getScheduledStartTime())
                 .scheduledEndTime(exam.getScheduledEndTime())
+                .shift(exam.getShift())
                 .published(exam.isPublished())
                 .createdAt(exam.getCreatedAt())
                 .updatedAt(exam.getUpdatedAt())

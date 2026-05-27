@@ -80,5 +80,12 @@ public interface ExamRepository extends MongoRepository<Exam, String> {
      * @return lista de todos los exámenes activos
      */
     List<Exam> findByActiveTrue();
+
+    /**
+     * Busca todos los exámenes publicados y activos (para alumnos).
+     *
+     * @return lista de exámenes publicados y activos
+     */
+    List<Exam> findByPublishedTrueAndActiveTrue();
 }
 

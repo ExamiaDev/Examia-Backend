@@ -30,6 +30,7 @@ public class ExamResponse {
     private Double passingScore;
     private LocalDateTime scheduledStartTime;
     private LocalDateTime scheduledEndTime;
+    private String shift;
     private boolean published;
     private boolean shuffleQuestions;
     private boolean shuffleOptions;

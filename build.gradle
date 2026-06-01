@@ -53,20 +53,50 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
-    finalizedBy jacocoTestReport
+    finalizedBy jacocoTestReport, jacocoTestCoverageVerification
 }
 
 jacoco {
     toolVersion = "0.8.11"
 }
 
+def coverageExcludes = [
+    '**/*Application*',
+    '**/*Config*',
+    '**/config/**',
+    '**/dto/**',
+    '**/model/**',
+    '**/entity/**',
+    '**/exception/**',
+    '**/*Request*',
+    '**/*Response*'
+]
+
 jacocoTestReport {
     dependsOn test
+
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: coverageExcludes)
+    }))
 
     reports {
         xml.required = true
         html.required = true
         csv.required = false
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn test
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: coverageExcludes)
+    }))
+    violationRules {
+        rule {
+            limit {
+                minimum = '0.80'.toBigDecimal()
+            }
+        }
     }
 }
 

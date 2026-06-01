@@ -39,11 +39,22 @@ class AuthResponseTest {
 
     @Test
     void authResponseAllArgsConstructor() {
-        AuthResponse response = new AuthResponse("token", "email@test.com", "Juan", "Perez", Role.DOCENTE, "Message");
+        AuthResponse response = new AuthResponse(
+                "id-123",
+                "token",
+                "email@test.com",
+                "Juan",
+                "Perez",
+                "12345",
+                Role.DOCENTE,
+                "Message"
+        );
+        assertEquals("id-123", response.getId());
         assertEquals("token", response.getToken());
         assertEquals("email@test.com", response.getEmail());
         assertEquals("Juan", response.getNombre());
         assertEquals("Perez", response.getApellido());
+        assertEquals("12345", response.getLegajo());
         assertEquals(Role.DOCENTE, response.getRole());
         assertEquals("Message", response.getMessage());
     }

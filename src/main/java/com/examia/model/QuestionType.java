@@ -40,6 +40,16 @@ public enum QuestionType {
     ORDERING,
 
     /**
+     * Pregunta de arbol de decisión (se guarda internamente como orden correcto)
+     */
+    DECISION_TREE,
+
+    /**
+     * Pregunta de matriz/tablas (se guarda internamente como pares de relacionamiento)
+     */
+    MATRIX,
+
+    /**
      * Pregunta de relacionar/emparejar
      */
     MATCHING

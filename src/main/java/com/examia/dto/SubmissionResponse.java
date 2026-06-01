@@ -1,6 +1,7 @@
 package com.examia.dto;
 
 import com.examia.model.QuestionType;
+import com.examia.model.DecisionTreeDefinition;
 import com.examia.model.SubmissionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -64,6 +65,7 @@ public class SubmissionResponse {
         private List<Integer> correctAnswers;
         private String correctTextAnswer;
         private List<String> correctOrder;
+        private DecisionTreeDefinition decisionTree;
         private Map<String, String> matchingPairs;
 
         // Respuesta del alumno

@@ -64,6 +64,12 @@ public class Question {
     private List<String> correctOrder;
 
     /**
+     * Definición del árbol para preguntas de tipo DECISION_TREE.
+     * La respuesta correcta se guarda en correctOrder como la secuencia de etiquetas elegidas.
+     */
+    private DecisionTreeDefinition decisionTree;
+
+    /**
      * Puntos asignados a esta pregunta
      */
     private Double points;

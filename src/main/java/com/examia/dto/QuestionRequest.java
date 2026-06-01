@@ -1,6 +1,7 @@
 package com.examia.dto;
 
 import com.examia.model.QuestionType;
+import com.examia.model.DecisionTreeDefinition;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -62,6 +63,11 @@ public class QuestionRequest {
      * Orden correcto para preguntas de tipo ORDERING
      */
     private List<String> correctOrder;
+
+    /**
+     * Definición del árbol para preguntas DECISION_TREE
+     */
+    private DecisionTreeDefinition decisionTree;
 
     /**
      * Puntos asignados a esta pregunta

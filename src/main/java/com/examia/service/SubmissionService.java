@@ -230,6 +230,7 @@ public class SubmissionService {
                     .correctAnswers(q.getCorrectAnswers())
                     .correctTextAnswer(q.getCorrectTextAnswer())
                     .correctOrder(q.getCorrectOrder())
+                    .decisionTree(q.getDecisionTree())
                     .matchingPairs(q.getMatchingPairs())
                     .selectedOptions(sa.getSelectedOptions())
                     .textAnswer(sa.getTextAnswer())

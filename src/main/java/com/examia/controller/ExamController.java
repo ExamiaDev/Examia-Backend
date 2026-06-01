@@ -130,6 +130,22 @@ public class ExamController {
     }
 
     /**
+     * Obtiene todos los exámenes publicados (para alumnos).
+     *
+     * GET /api/exams/published
+     */
+    @GetMapping("/published")
+    @PreAuthorize("hasRole('ALUMNO')")
+    @Operation(summary = "Obtener todos los exámenes publicados", description = "Obtiene todos los exámenes disponibles para los alumnos")
+    @ApiResponse(responseCode = "200", description = "Lista de exámenes publicados")
+    @ApiResponse(responseCode = "401", description = "No autenticado")
+    @ApiResponse(responseCode = "403", description = "No autorizado - Solo alumnos")
+    public ResponseEntity<List<ExamSummaryResponse>> getPublishedExams() {
+        List<ExamSummaryResponse> exams = examService.getAllPublishedExams();
+        return ResponseEntity.ok(exams);
+    }
+
+    /**
      * Obtiene los exámenes publicados de una materia (para alumnos).
      *
      * GET /api/exams/subject/{subjectId}

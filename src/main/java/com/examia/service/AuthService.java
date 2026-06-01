@@ -71,10 +71,12 @@ public class AuthService {
         String token = jwtService.generateToken(user);
 
         return AuthResponse.builder()
+                .id(user.getId())
                 .token(token)
                 .email(user.getEmail())
                 .nombre(user.getNombre())
                 .apellido(user.getApellido())
+                .legajo(user.getLegajo())
                 .role(user.getRole())
                 .message("Registro exitoso")
                 .build();
@@ -103,10 +105,12 @@ public class AuthService {
         String token = jwtService.generateToken(user);
 
         return AuthResponse.builder()
+                .id(user.getId())
                 .token(token)
                 .email(user.getEmail())
                 .nombre(user.getNombre())
                 .apellido(user.getApellido())
+                .legajo(user.getLegajo())
                 .role(user.getRole())
                 .message("Inicio de sesión exitoso")
                 .build();
@@ -173,10 +177,12 @@ public class AuthService {
 
         log.info("[LoginUade] Login successful for legajo: {}", request.getLegajo());
         return AuthResponse.builder()
+                .id(user.getId())
                 .token(token)
                 .email(user.getEmail())
                 .nombre(user.getNombre())
                 .apellido(user.getApellido())
+                .legajo(user.getLegajo())
                 .role(user.getRole())
                 .message("Inicio de sesión exitoso")
                 .build();

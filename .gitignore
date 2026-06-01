@@ -69,3 +69,5 @@ application-local.properties
 *.key
 
 node_modules/
+
+.env

@@ -85,6 +85,11 @@ public class Exam {
     private LocalDateTime scheduledEndTime;
 
     /**
+     * Turno del examen (1 = Mañana, 2 = Tarde, 3 = Noche)
+     */
+    private String shift;
+
+    /**
      * Indica si el examen está publicado y disponible para los alumnos
      */
     @Builder.Default

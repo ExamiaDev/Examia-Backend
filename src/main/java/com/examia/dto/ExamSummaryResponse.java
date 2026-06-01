@@ -29,6 +29,7 @@ public class ExamSummaryResponse {
     private Double passingScore;
     private LocalDateTime scheduledStartTime;
     private LocalDateTime scheduledEndTime;
+    private String shift;
     private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

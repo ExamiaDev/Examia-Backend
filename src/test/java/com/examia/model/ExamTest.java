@@ -103,6 +103,7 @@ class ExamTest {
                 60.0,
                 now,
                 now.plusHours(1),
+                "Mañana",
                 true,
                 false,
                 false,

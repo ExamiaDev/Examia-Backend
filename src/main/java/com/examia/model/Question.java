@@ -79,6 +79,16 @@ public class Question {
     private String imageUrl;
 
     /**
+     * Tema o sección a la que pertenece la pregunta dentro del examen
+     */
+    private String topic;
+
+    /**
+     * Color hexadecimal asignado al tema (ej. "#1565c0")
+     */
+    private String topicColor;
+
+    /**
      * Orden de la pregunta en el examen
      */
     private Integer order;

@@ -101,5 +101,10 @@ public class CreateExamRequest {
      */
     @Positive(message = "El número de intentos debe ser positivo")
     private Integer maxAttempts;
+
+    /**
+     * Turno del examen (1 = Mañana, 2 = Tarde, 3 = Noche)
+     */
+    private String shift;
 }
 

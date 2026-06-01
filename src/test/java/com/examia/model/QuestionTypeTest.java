@@ -11,7 +11,7 @@ class QuestionTypeTest {
 
     @Test
     void allQuestionTypes_exist() {
-        assertEquals(8, QuestionType.values().length);
+        assertEquals(10, QuestionType.values().length);
     }
 
     @Test
@@ -47,6 +47,16 @@ class QuestionTypeTest {
     @Test
     void ordering_exists() {
         assertEquals("ORDERING", QuestionType.ORDERING.name());
+    }
+
+    @Test
+    void decisionTree_exists() {
+        assertEquals("DECISION_TREE", QuestionType.DECISION_TREE.name());
+    }
+
+    @Test
+    void matrix_exists() {
+        assertEquals("MATRIX", QuestionType.MATRIX.name());
     }
 
     @Test

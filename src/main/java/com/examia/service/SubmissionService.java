@@ -232,6 +232,8 @@ public class SubmissionService {
                     .correctOrder(q.getCorrectOrder())
                     .decisionTree(q.getDecisionTree())
                     .matchingPairs(q.getMatchingPairs())
+                    .matrixColumnHeaders(q.getMatrixColumnHeaders())
+                    .matrixRows(q.getMatrixRows())
                     .selectedOptions(sa.getSelectedOptions())
                     .textAnswer(sa.getTextAnswer())
                     .orderAnswer(sa.getOrderAnswer())

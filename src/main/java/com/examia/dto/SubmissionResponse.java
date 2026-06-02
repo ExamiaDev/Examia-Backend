@@ -67,6 +67,8 @@ public class SubmissionResponse {
         private List<String> correctOrder;
         private DecisionTreeDefinition decisionTree;
         private Map<String, String> matchingPairs;
+        private List<String> matrixColumnHeaders;
+        private List<List<String>> matrixRows;
 
         // Respuesta del alumno
         private List<Integer> selectedOptions;

@@ -59,13 +59,23 @@ public class Question {
     private Map<String, String> matchingPairs;
 
     /**
+     * Encabezados de columnas para preguntas tipo MATRIX (tabla de referencia del docente).
+     */
+    private List<String> matrixColumnHeaders;
+
+    /**
+     * Filas de la tabla MATRIX; cada fila tiene una celda por columna.
+     */
+    private List<List<String>> matrixRows;
+
+    /**
      * Orden correcto para preguntas de tipo ORDERING
      */
     private List<String> correctOrder;
 
     /**
      * Definición del árbol para preguntas de tipo DECISION_TREE.
-     * La respuesta correcta se guarda en correctOrder como la secuencia de etiquetas elegidas.
+     * El árbol completo es la respuesta de referencia del docente.
      */
     private DecisionTreeDefinition decisionTree;
 

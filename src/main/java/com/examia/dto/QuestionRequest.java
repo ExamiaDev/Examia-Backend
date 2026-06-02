@@ -60,6 +60,16 @@ public class QuestionRequest {
     private Map<String, String> matchingPairs;
 
     /**
+     * Encabezados de columnas para preguntas MATRIX
+     */
+    private List<String> matrixColumnHeaders;
+
+    /**
+     * Filas de la tabla MATRIX
+     */
+    private List<List<String>> matrixRows;
+
+    /**
      * Orden correcto para preguntas de tipo ORDERING
      */
     private List<String> correctOrder;

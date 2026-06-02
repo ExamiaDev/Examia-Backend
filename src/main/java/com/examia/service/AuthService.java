@@ -62,7 +62,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .recoveryEmail(recoveryEmail)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.ALUMNO)
+                .role(request.getRole() != null ? request.getRole() : Role.ALUMNO)
                 .enabled(true)
                 .build();
 

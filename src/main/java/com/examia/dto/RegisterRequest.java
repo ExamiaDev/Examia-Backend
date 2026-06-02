@@ -1,5 +1,6 @@
 package com.examia.dto;
 
+import com.examia.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -33,4 +34,6 @@ public class RegisterRequest {
 
     @NotBlank(message = "La contraseña es obligatoria")
     private String password;
+
+    private Role role;
 }

@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cobertura de Tests — Examia Backend</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f6fa; color: #1e2533; }
+
+    /* ── Tabs ── */
+    .tab-bar { display: flex; background: #fff; border-bottom: 2px solid #e9ecf3; padding: 0 32px; position: sticky; top: 0; z-index: 10; }
+    .tab-btn  { padding: 16px 24px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+                border: none; background: none; color: #8a94b0;
+                border-bottom: 2px solid transparent; margin-bottom: -2px;
+                transition: color .15s, border-color .15s; }
+    .tab-btn.active { color: #3b5bdb; border-bottom-color: #3b5bdb; }
+    .tab-btn:hover:not(.active) { color: #4a5568; }
+    .tab-content        { display: none; padding: 32px 24px; max-width: 980px; margin: 0 auto; }
+    .tab-content.active { display: block; }
+
+    /* ── Shared ── */
+    h1 { font-size: 1.45rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: #1e2533; }
+    .subtitle { color: #6b7a99; font-size: 0.8rem; margin-bottom: 28px; }
+    .section  { margin-bottom: 36px; }
+
+    .good { color: #1a9e5e; } .warn { color: #d97706; } .bad { color: #dc2626; } .na { color: #b0b8cc; }
+
+    /* ── Cards ── */
+    .cards { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 32px; }
+    .card  { background: #fff; border-radius: 12px; padding: 20px 22px; flex: 1 1 150px;
+             box-shadow: 0 1px 5px rgba(0,0,0,.08); min-width: 130px; }
+    .card .lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .07em; color: #8a94b0; margin-bottom: 6px; }
+    .card .val { font-size: 2rem; font-weight: 800; }
+    .card .sub { font-size: 0.75rem; color: #8a94b0; margin-top: 2px; }
+
+    /* ── Chart panels ── */
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 32px; }
+    @media (max-width: 640px) { .chart-grid { grid-template-columns: 1fr; } }
+    .chart-panel { background: #fff; border-radius: 12px; padding: 22px 24px;
+                   box-shadow: 0 1px 5px rgba(0,0,0,.08); }
+    .chart-panel h2 { margin-bottom: 18px; }
+    .chart-panel.full { grid-column: 1 / -1; }
+
+    /* ── Table (dev) ── */
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px;
+            overflow: hidden; box-shadow: 0 1px 5px rgba(0,0,0,.08); font-size: 0.84rem; }
+    thead { background: #f0f2f8; }
+    th { text-align: left; padding: 10px 14px; font-size: 0.7rem; text-transform: uppercase;
+         letter-spacing: .07em; color: #6b7a99; font-weight: 600; }
+    td { padding: 10px 14px; border-top: 1px solid #f0f2f8; }
+    tr:hover td { background: #fafbfd; }
+    .pkg { font-weight: 700; }
+    .cls td:first-child { padding-left: 28px; color: #5a6480; }
+    details summary { cursor: pointer; list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+    .toggle { font-size: 0.68rem; color: #8a94b0; margin-left: 6px; font-weight: 400; }
+
+    /* ── Bar inline ── */
+    .bar-wrap { background: #e9ecf3; border-radius: 99px; height: 7px; width: 100%; overflow: hidden; }
+    .bar      { height: 100%; border-radius: 99px; }
+
+    /* ── Excluded note ── */
+    .note { background: #f8f9fc; border: 1px solid #e2e6f0; border-radius: 10px;
+            padding: 14px 18px; font-size: 0.8rem; color: #6b7a99; }
+    .note strong { color: #4a5568; }
+
+    /* ── CLIENT: hero ── */
+    .hero { background: linear-gradient(135deg, #1a9e5e 0%, #0d7a47 100%);
+            color: #fff; border-radius: 16px; padding: 40px; margin-bottom: 28px; }
+    .hero-top   { font-size: 0.75rem; opacity: .7; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 20px; }
+    .hero-main  { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 6px; }
+    .hero-pct   { font-size: 5rem; font-weight: 800; line-height: 1; }
+    .hero-label { font-size: 1.05rem; opacity: .85; padding-bottom: 10px; line-height: 1.4; }
+    .hero-sub   { font-size: 0.8rem; opacity: .65; }
+    .hero-stats { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 26px;
+                  border-top: 1px solid rgba(255,255,255,.2); padding-top: 22px; }
+    .hero-stat .lbl { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .07em; opacity: .7; margin-bottom: 5px; }
+    .hero-stat .val { font-size: 1.45rem; font-weight: 700; }
+
+    /* ── CLIENT: module cards ── */
+    .modules { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 14px; margin-bottom: 28px; }
+    .module  { background: #fff; border-radius: 12px; padding: 20px;
+               box-shadow: 0 1px 5px rgba(0,0,0,.07); position: relative; overflow: hidden; }
+    .module::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; border-radius:4px 0 0 4px; }
+    .module.green::before  { background: #1a9e5e; }
+    .module.yellow::before { background: #d97706; }
+    .module .mod-name { font-weight: 700; font-size: 0.92rem; margin-bottom: 3px; }
+    .module .mod-desc { font-size: 0.73rem; color: #8a94b0; margin-bottom: 14px; line-height: 1.4; }
+    .module .mod-pct  { font-size: 1.75rem; font-weight: 800; }
+    .module .mod-sub  { font-size: 0.68rem; color: #8a94b0; margin-top: 2px; }
+
+    /* ── CLIENT: callouts ── */
+    .callouts { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+    .callout  { background: #fff; border-radius: 12px; padding: 18px 22px;
+                box-shadow: 0 1px 5px rgba(0,0,0,.07); display: flex; gap: 14px; align-items: flex-start; }
+    .callout .icon { font-size: 1.25rem; flex-shrink: 0; margin-top: 1px; }
+    .callout strong { display: block; font-size: 0.88rem; margin-bottom: 4px; }
+    .callout p  { font-size: 0.78rem; color: #6b7a99; line-height: 1.6; }
+
+    footer { font-size: 0.7rem; color: #b0b8cc; text-align: center; padding: 8px 0 32px; }
+
+    /* ── HOME ── */
+    .home-hero { text-align: center; padding: 48px 24px 36px; }
+    .home-hero .logo { font-size: 2.6rem; font-weight: 900; color: #1a9e5e; letter-spacing: -1px; margin-bottom: 6px; }
+    .home-hero .tagline { font-size: 0.95rem; color: #6b7a99; margin-bottom: 36px; }
+
+    .link-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 40px; }
+    .link-card { background: #fff; border-radius: 14px; padding: 22px 24px;
+                 box-shadow: 0 1px 6px rgba(0,0,0,.08); text-decoration: none; color: inherit;
+                 display: flex; align-items: flex-start; gap: 16px;
+                 transition: box-shadow .15s, transform .15s; border: 1.5px solid transparent; }
+    .link-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); transform: translateY(-2px); border-color: #e2e6f0; }
+    .link-card .lc-icon { font-size: 1.8rem; flex-shrink: 0; margin-top: 2px; }
+    .link-card .lc-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .link-card .lc-url  { font-size: 0.73rem; color: #8a94b0; word-break: break-all; line-height: 1.4; }
+    .link-card .lc-desc { font-size: 0.78rem; color: #6b7a99; margin-top: 6px; line-height: 1.4; }
+
+    .home-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+    .h-stat { background: #fff; border-radius: 12px; padding: 18px 22px; flex: 1 1 140px;
+              box-shadow: 0 1px 5px rgba(0,0,0,.08); text-align: center; }
+    .h-stat .h-val { font-size: 1.8rem; font-weight: 800; }
+    .h-stat .h-lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .07em; color: #8a94b0; margin-top: 4px; }
+
+    /* ── SONAR: gate banner ── */
+    .gate { border-radius: 14px; padding: 28px 32px; margin-bottom: 28px;
+            display: flex; align-items: center; gap: 20px; }
+    .gate.pass { background: linear-gradient(135deg, #1a9e5e 0%, #0d7a47 100%); color: #fff; }
+    .gate.fail { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #fff; }
+    .gate-icon { font-size: 2.8rem; line-height: 1; }
+    .gate-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
+    .gate-sub   { font-size: 0.82rem; opacity: .8; }
+
+    /* ── SONAR: metric cards ── */
+    .sonar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 14px; margin-bottom: 28px; }
+    .s-card { background: #fff; border-radius: 12px; padding: 20px 18px;
+              box-shadow: 0 1px 5px rgba(0,0,0,.08); text-align: center; position: relative; overflow: hidden; }
+    .s-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 4px; }
+    .s-card.green::after  { background: #1a9e5e; }
+    .s-card.yellow::after { background: #d97706; }
+    .s-card.red::after    { background: #dc2626; }
+    .s-card.gray::after   { background: #b0b8cc; }
+    .s-card .s-val  { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+    .s-card .s-lbl  { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .07em; color: #8a94b0; margin-bottom: 6px; }
+    .s-card .s-desc { font-size: 0.73rem; color: #6b7a99; line-height: 1.4; margin-top: 8px; }
+
+    /* ── SONAR: ratings row ── */
+    .ratings { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 28px; }
+    .rating  { background: #fff; border-radius: 12px; padding: 18px 22px; flex: 1 1 160px;
+               box-shadow: 0 1px 5px rgba(0,0,0,.08); display: flex; align-items: center; gap: 16px; }
+    .rating .badge { width: 48px; height: 48px; border-radius: 10px; display: flex;
+                     align-items: center; justify-content: center; font-size: 1.6rem;
+                     font-weight: 800; color: #fff; flex-shrink: 0; }
+    .badge-A { background: #1a9e5e; }
+    .badge-B { background: #84cc16; }
+    .badge-C { background: #d97706; }
+    .badge-D { background: #f97316; }
+    .badge-E { background: #dc2626; }
+    .rating .r-name { font-weight: 700; font-size: 0.88rem; margin-bottom: 3px; }
+    .rating .r-desc { font-size: 0.74rem; color: #6b7a99; line-height: 1.4; }
+
+    /* ── SONAR: explanation table ── */
+    .explain-row { display: flex; gap: 10px; align-items: flex-start; padding: 14px 0;
+                   border-bottom: 1px solid #f0f2f8; }
+    .explain-row:last-child { border-bottom: none; }
+    .explain-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .explain-body strong { font-size: 0.88rem; display: block; margin-bottom: 3px; }
+    .explain-body p { font-size: 0.78rem; color: #6b7a99; line-height: 1.55; }
+    .sonar-section { background: #fff; border-radius: 12px; padding: 20px 22px;
+                     box-shadow: 0 1px 5px rgba(0,0,0,.08); margin-bottom: 28px; }
+    .sonar-section h2 { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('home',this)">Inicio</button>
+  <button class="tab-btn"        onclick="switchTab('dev',this)">Detalle tecnico</button>
+  <button class="tab-btn"        onclick="switchTab('client',this)">Vista cliente</button>
+  <!-- <button class="tab-btn"        onclick="switchTab('sonar',this)">SonarCloud</button> -->
+</div>
+
+<!-- ════════════════════════════════
+     TAB 0 — HOME
+════════════════════════════════ -->
+<div id="tab-home" class="tab-content active">
+
+  <div class="home-hero">
+    <div class="logo">Examia</div>
+    <div class="tagline">Plataforma de examenes universitarios &nbsp;·&nbsp; Reporte de calidad &nbsp;·&nbsp; Mayo 2026</div>
+  </div>
+
+  <!-- Quick stats -->
+  <div class="home-stats">
+    <div class="h-stat">
+      <div class="h-val good">93.8%</div>
+      <div class="h-lbl">Cobertura de tests</div>
+    </div>
+    <div class="h-stat">
+      <div class="h-val good">0</div>
+      <div class="h-lbl">Bugs detectados</div>
+    </div>
+    <div class="h-stat">
+      <div class="h-val good">A</div>
+      <div class="h-lbl">Mantenibilidad</div>
+    </div>
+
+    <div class="h-stat">
+      <div class="h-val good">✓</div>
+      <div class="h-lbl">Quality Gate</div>
+    </div>
+  </div>
+
+  <!-- Links -->
+  <h2 style="margin-bottom:16px">Links del proyecto</h2>
+  <div class="link-grid">
+
+    <a class="link-card" href="https://examia-frontend-pi.vercel.app/" target="_blank">
+      <div class="lc-icon">🌐</div>
+      <div>
+        <div class="lc-name">Aplicacion web</div>
+        <div class="lc-url">examia-frontend-pi.vercel.app</div>
+        <div class="lc-desc">Plataforma Examia en produccion. Acceso para docentes y alumnos.</div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://sonarcloud.io/organizations/examiadev/projects" target="_blank">
+      <div class="lc-icon">📊</div>
+      <div>
+        <div class="lc-name">SonarCloud — Calidad</div>
+        <div class="lc-url">sonarcloud.io · examiadev/projects</div>
+        <div class="lc-desc">Analisis estatico de codigo: bugs, vulnerabilidades, cobertura y deuda tecnica.</div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://github.com/ExamiaDev/Examia-Backend.git" target="_blank">
+      <div class="lc-icon">⚙️</div>
+      <div>
+        <div class="lc-name">GitHub — Backend</div>
+        <div class="lc-url">github.com/ExamiaDev/Examia-Backend</div>
+        <div class="lc-desc">Repositorio del servidor: API REST en Spring Boot, tests y CI/CD.</div>
+      </div>
+    </a>
+
+    <a class="link-card" href="https://github.com/ExamiaDev/Examia-Frontend.git" target="_blank">
+      <div class="lc-icon">🎨</div>
+      <div>
+        <div class="lc-name">GitHub — Frontend</div>
+        <div class="lc-url">github.com/ExamiaDev/Examia-Frontend</div>
+        <div class="lc-desc">Repositorio de la interfaz de usuario deployada en Vercel.</div>
+      </div>
+    </a>
+
+
+
+  </div>
+
+  <footer>Examia Backend &nbsp;·&nbsp; Reporte generado: Mayo 2026</footer>
+</div>
+
+<!-- ════════════════════════════════
+     TAB 1 — DETALLE TÉCNICO
+════════════════════════════════ -->
+<div id="tab-dev" class="tab-content">
+
+  <h1>JaCoCo — Cobertura de Lineas</h1>
+  <p class="subtitle">Examia Backend &nbsp;·&nbsp; 2026-05-26 &nbsp;·&nbsp; Excluye config, dto y repository</p>
+
+  <!-- Summary cards -->
+  <div class="cards">
+    <div class="card">
+      <div class="lbl">Cobertura global</div>
+      <div class="val good">93.8%</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Metodos cubiertos</div>
+      <div class="val good">88.5%</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Paquetes analizados</div>
+      <div class="val" style="color:#3b5bdb">6</div>
+      <div class="sub">controller · exception · model<br>scheduler · security · service</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Suite de tests</div>
+      <div class="val good">✓</div>
+      <div class="sub">Todos los tests pasan</div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="chart-grid">
+
+    <div class="chart-panel">
+      <h2>Cobertura global</h2>
+      <canvas id="donutGlobal" height="220"></canvas>
+    </div>
+
+    <div class="chart-panel">
+      <h2>Lineas cubiertas por paquete</h2>
+      <canvas id="barPkg" height="220"></canvas>
+    </div>
+
+    <div class="chart-panel full">
+      <h2>Lineas cubiertas por clase</h2>
+      <canvas id="barClasses" height="180"></canvas>
+    </div>
+
+  </div>
+
+  <!-- Table -->
+  <div class="section">
+    <h2>Tabla de cobertura</h2>
+    <table>
+      <thead>
+        <tr><th style="width:55%">Paquete / Clase</th><th>Lineas cubiertas</th><th style="width:35%"></th></tr>
+      </thead>
+      <tbody>
+
+        <tr><td class="pkg"><details><summary>controller <span class="toggle">▸ 3 clases</span></summary></td>
+            <td><span class="good">84.0%</span></td>
+            <td><div class="bar-wrap"><div class="bar" style="width:84%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>AuthController</td>         <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>ExamController</td>         <td><span class="warn">66.7%</span></td><td><div class="bar-wrap"><div class="bar" style="width:66.7%;background:#d97706"></div></div></td></tr>
+        <tr><td colspan="3" style="padding: 4px 14px 8px 28px">
+          <span style="background:#fff8e1;border:1px solid #f59e0b;color:#92400e;border-radius:6px;padding:4px 10px;font-size:0.72rem;display:inline-flex;align-items:center;gap:6px;">
+            ⚠️ Porcentaje bajo — funcionalidad en desarrollo (work in progress)
+          </span>
+        </td></tr>
+        <tr class="cls"><td>PasswordResetController</td><td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr><td colspan="3" style="padding:0"></td></tr>
+
+        <tr><td class="pkg"><details><summary>exception <span class="toggle">▸ 7 clases</span></summary></td>
+            <td><span class="good">83.3%</span></td>
+            <td><div class="bar-wrap"><div class="bar" style="width:83.3%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>GlobalExceptionHandler</td>      <td><span class="warn">80.0%</span></td><td><div class="bar-wrap"><div class="bar" style="width:80%;background:#d97706"></div></div></td></tr>
+        <tr><td colspan="3" style="padding: 4px 14px 8px 28px">
+          <span style="background:#fff8e1;border:1px solid #f59e0b;color:#92400e;border-radius:6px;padding:4px 10px;font-size:0.72rem;display:inline-flex;align-items:center;gap:6px;">
+            ⚠️ Porcentaje bajo — funcionalidad en desarrollo (work in progress)
+          </span>
+        </td></tr>
+        <tr class="cls"><td>InvalidCredentialsException</td> <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>UnauthorizedAccessException</td> <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>UserAlreadyExistsException</td>  <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>InvalidResetCodeException</td>   <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>ExamNotFoundException</td>       <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>UserNotFoundException</td>       <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr><td colspan="3" style="padding:0"></td></tr>
+
+        <tr><td class="pkg"><details><summary>model <span class="toggle">▸ 6 clases</span></summary></td>
+            <td><span class="good">100%</span></td>
+            <td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>User</td>               <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>Exam</td>               <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>Question</td>           <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>PasswordResetToken</td> <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>Role</td>               <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>QuestionType</td>       <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr><td colspan="3" style="padding:0"></td></tr>
+
+        <tr><td class="pkg">scheduler</td>
+            <td><span class="warn">80.0%</span></td>
+            <td><div class="bar-wrap"><div class="bar" style="width:80%;background:#d97706"></div></div></td></tr>
+        <tr class="cls"><td>KeepAliveScheduler</td><td><span class="warn">80.0%</span></td><td><div class="bar-wrap"><div class="bar" style="width:80%;background:#d97706"></div></div></td></tr>
+        <tr><td colspan="3" style="padding:0"></td></tr>
+
+        <tr><td class="pkg">security</td>
+            <td><span class="good">100%</span></td>
+            <td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>JwtAuthenticationFilter</td><td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr><td colspan="3" style="padding:0"></td></tr>
+
+        <tr><td class="pkg"><details><summary>service <span class="toggle">▸ 4 clases</span></summary></td>
+            <td><span class="good">96.2%</span></td>
+            <td><div class="bar-wrap"><div class="bar" style="width:96.2%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>ExamService</td>          <td><span class="good">93.0%</span></td><td><div class="bar-wrap"><div class="bar" style="width:93%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>AuthService</td>          <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>JwtService</td>           <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+        <tr class="cls"><td>PasswordResetService</td> <td><span class="good">100%</span></td><td><div class="bar-wrap"><div class="bar" style="width:100%;background:#1a9e5e"></div></div></td></tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <strong>Excluidos del analisis:</strong> &nbsp;
+    <code>config</code> (configuracion del framework) &nbsp;·&nbsp;
+    <code>dto</code> (clases generadas por Lombok) &nbsp;·&nbsp;
+    <code>repository</code> (interfaces Spring Data, sin implementacion propia)
+  </div>
+
+  <!-- Glosario -->
+  <div class="section" style="margin-top:32px">
+    <h2>Que significa cada dato</h2>
+    <table>
+      <thead>
+        <tr><th style="width:22%">Dato</th><th>Que mide</th><th style="width:38%">Como interpretarlo</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="pkg">Cobertura global (93.8%)</td>
+          <td>Porcentaje de lineas de codigo que fueron ejecutadas al menos una vez durante la suite de tests.</td>
+          <td>Un valor alto indica que los tests recorren la mayoria del codigo. Por debajo del 80% suele considerarse insuficiente para proyectos en produccion.</td>
+        </tr>
+        <tr>
+          <td class="pkg">Metodos cubiertos (88.5%)</td>
+          <td>Proporcion de metodos/funciones que fueron invocados por algun test.</td>
+          <td>Complementa la cobertura de lineas: un metodo puede estar cubierto en lineas pero nunca llamado directamente. Valores altos aqui indican una suite robusta.</td>
+        </tr>
+        <tr>
+          <td class="pkg">Lineas cubiertas por paquete</td>
+          <td>Cobertura de lineas desagregada por capa de la aplicacion (controller, service, model, etc.).</td>
+          <td>Permite identificar que capas estan bien testeadas y cuales necesitan atencion. Verde ≥ 80%, amarillo 50–79%.</td>
+        </tr>
+        <tr>
+          <td class="pkg">Lineas cubiertas por clase</td>
+          <td>Cobertura individual de cada clase dentro del proyecto.</td>
+          <td>Util para detectar clases especificas con baja cobertura. Una clase en amarillo no necesariamente es un problema si sus caminos no cubiertos son poco probables en produccion.</td>
+        </tr>
+        <tr>
+          <td class="pkg">Suite de tests ✓</td>
+          <td>Estado de ejecucion de todos los tests al momento de generar el reporte.</td>
+          <td>Si algun test falla el build no pasa y el reporte no se genera. El check verde confirma que todos los tests pasaron correctamente.</td>
+        </tr>
+        <tr>
+          <td class="pkg">Paquetes excluidos</td>
+          <td><code>config</code>, <code>dto</code> y <code>repository</code> fueron removidos del calculo.</td>
+          <td><code>config</code> no tiene logica testeable. <code>dto</code> tiene builders generados por Lombok que inflarian el denominador. <code>repository</code> son interfaces del framework, no codigo propio.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer style="margin-top:24px">Fuente: build/reports/jacoco/test/jacocoTestReport.xml &nbsp;·&nbsp; verde ≥ 80% &nbsp;·&nbsp; amarillo 50–79%</footer>
+</div>
+
+<!-- ════════════════════════════════
+     TAB 2 — VISTA CLIENTE
+════════════════════════════════ -->
+<div id="tab-client" class="tab-content">
+
+  <div class="hero">
+    <div class="hero-top">Examia Backend &nbsp;·&nbsp; Reporte de calidad &nbsp;·&nbsp; Mayo 2026</div>
+    <div class="hero-main">
+      <div class="hero-pct">93.8%</div>
+      <div class="hero-label">del codigo cubierto<br>por tests automatizados</div>
+    </div>
+    <div class="hero-sub">Medido sobre los modulos de logica de negocio de la aplicacion</div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="lbl">Metodos probados</div><div class="val">88.5%</div></div>
+      <div class="hero-stat"><div class="lbl">Suite de tests</div><div class="val">✓ Pasando</div></div>
+      <div class="hero-stat"><div class="lbl">Modulos criticos</div><div class="val">100%</div></div>
+    </div>
+  </div>
+
+  <!-- Client charts -->
+  <div class="chart-grid" style="margin-bottom:28px">
+    <div class="chart-panel">
+      <h2>Cobertura general</h2>
+      <canvas id="clientDonut" height="220"></canvas>
+    </div>
+    <div class="chart-panel">
+      <h2>Cobertura por area</h2>
+      <canvas id="clientBar" height="220"></canvas>
+    </div>
+  </div>
+
+  <h2 style="margin-bottom:14px">Estado por modulo</h2>
+  <div class="modules">
+    <div class="module green">
+      <div class="mod-name">Registracion</div>
+      <div class="mod-desc">Alta de nuevos usuarios y registro UADE</div>
+      <div class="mod-pct good">100%</div>
+      <div class="mod-sub">lineas cubiertas</div>
+    </div>
+    <div class="module green">
+      <div class="mod-name">Login</div>
+      <div class="mod-desc">Autenticacion y gestion de sesion con JWT</div>
+      <div class="mod-pct good">100%</div>
+      <div class="mod-sub">lineas cubiertas</div>
+    </div>
+    <div class="module green">
+      <div class="mod-name">Recupero de contraseña</div>
+      <div class="mod-desc">Solicitud, verificacion y reset</div>
+      <div class="mod-pct good">100%</div>
+      <div class="mod-sub">lineas cubiertas</div>
+    </div>
+    <div class="module yellow">
+      <div class="mod-name">Examenes</div>
+      <div class="mod-desc">Creacion, edicion y consulta</div>
+      <div class="mod-pct warn">66.7%</div>
+      <div class="mod-sub">lineas cubiertas</div>
+    </div>
+    <div class="module green">
+      <div class="mod-name">Seguridad</div>
+      <div class="mod-desc">Tokens JWT y control de acceso</div>
+      <div class="mod-pct good">100%</div>
+      <div class="mod-sub">lineas cubiertas</div>
+    </div>
+    <div class="module green">
+      <div class="mod-name">Modelos de datos</div>
+      <div class="mod-desc">Usuario, Examen, Pregunta y tipos</div>
+      <div class="mod-pct good">100%</div>
+      <div class="mod-sub">lineas cubiertas</div>
+    </div>
+    <div class="module yellow">
+      <div class="mod-name">Manejo de errores</div>
+      <div class="mod-desc">Respuestas HTTP y excepciones globales</div>
+      <div class="mod-pct warn">83%</div>
+      <div class="mod-sub">lineas cubiertas</div>
+      <div style="margin-top:10px;background:#fff8e1;border:1px solid #f59e0b;color:#92400e;border-radius:6px;padding:4px 8px;font-size:0.7rem;display:inline-flex;align-items:center;gap:5px;">
+        ⚠️ Work in progress
+      </div>
+    </div>
+  </div>
+
+  <div class="callouts">
+    <div class="callout">
+      <div class="icon">✅</div>
+      <div>
+        <strong>El 93.8% del codigo esta cubierto por tests automatizados</strong>
+        <p>Cada cambio que el equipo sube activa los tests automaticamente para confirmar que nada se rompe antes de llegar a produccion.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="icon">🔒</div>
+      <div>
+        <strong>Los flujos criticos tienen cobertura del 100%</strong>
+        <p>Login, autenticacion con JWT y recupero de contraseña estan completamente cubiertos. Son las areas mas sensibles y las mas protegidas.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="icon">📈</div>
+      <div>
+        <strong>Proceso de calidad continuo</strong>
+        <p>Cada nueva funcionalidad viene acompanada de tests. Si un test falla, el codigo no puede llegar a produccion.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>Examia Backend &nbsp;·&nbsp; Medicion con JaCoCo &nbsp;·&nbsp; Tests unitarios sobre logica de negocio</footer>
+</div>
+
+<!-- ════════════════════════════════
+     TAB 3 — SONARCLOUD
+════════════════════════════════ -->
+<div id="tab-sonar" class="tab-content">
+
+  <!-- Quality Gate -->
+  <div class="gate pass">
+    <div class="gate-icon">✅</div>
+    <div>
+      <div class="gate-title">Quality Gate: Aprobado</div>
+      <div class="gate-sub">El proyecto cumple todos los umbrales de calidad definidos por SonarCloud &nbsp;·&nbsp; Ultimo analisis: Mayo 2026</div>
+    </div>
+  </div>
+
+  <!-- Metric cards -->
+  <h2 style="margin-bottom:16px">Metricas principales</h2>
+  <div class="sonar-grid">
+
+    <div class="s-card green">
+      <div class="s-lbl">Bugs</div>
+      <div class="s-val good">0</div>
+      <div class="s-desc">Sin errores de logica detectados en el codigo.</div>
+    </div>
+
+    <div class="s-card red">
+      <div class="s-lbl">Vulnerabilidades</div>
+      <div class="s-val bad">4</div>
+      <div class="s-desc">Puntos del codigo que podrian ser explotados. Requieren atencion prioritaria.</div>
+    </div>
+
+    <div class="s-card yellow">
+      <div class="s-lbl">Hotspots de Seguridad</div>
+      <div class="s-val warn">1</div>
+      <div class="s-desc">50% revisado. Zona sensible que el equipo debe evaluar manualmente.</div>
+    </div>
+
+    <div class="s-card yellow">
+      <div class="s-lbl">Code Smells</div>
+      <div class="s-val warn">10</div>
+      <div class="s-desc">Practicas de codigo mejorable. No causan errores pero reducen la mantenibilidad.</div>
+    </div>
+
+    <div class="s-card green">
+      <div class="s-lbl">Cobertura</div>
+      <div class="s-val good">91%</div>
+      <div class="s-desc">Porcentaje del codigo verificado por tests automatizados segun SonarCloud.</div>
+    </div>
+
+    <div class="s-card green">
+      <div class="s-lbl">Duplicacion</div>
+      <div class="s-val good">2.1%</div>
+      <div class="s-desc">Codigo repetido. Por debajo del 3% es excelente.</div>
+    </div>
+
+    <div class="s-card gray">
+      <div class="s-lbl">Lineas de codigo</div>
+      <div class="s-val" style="color:#4a5568">2115</div>
+      <div class="s-desc">Total de lineas de codigo analizado.</div>
+    </div>
+
+    <div class="s-card green">
+      <div class="s-lbl">Deuda tecnica</div>
+      <div class="s-val good">64m</div>
+      <div class="s-desc">Tiempo estimado para resolver todos los code smells.</div>
+    </div>
+
+  </div>
+
+  <!-- Ratings -->
+  <h2 style="margin-bottom:16px">Calificaciones por dimension</h2>
+  <div class="ratings">
+
+    <div class="rating">
+      <div class="badge badge-A">A</div>
+      <div>
+        <div class="r-name">Confiabilidad</div>
+        <div class="r-desc">0 bugs detectados. El codigo se comporta de forma predecible y correcta.</div>
+      </div>
+    </div>
+
+    <div class="rating">
+      <div class="badge badge-E">E</div>
+      <div>
+        <div class="r-name">Seguridad</div>
+        <div class="r-desc">4 vulnerabilidades detectadas. Es la dimension con mayor prioridad de mejora.</div>
+      </div>
+    </div>
+
+    <div class="rating">
+      <div class="badge badge-A">A</div>
+      <div>
+        <div class="r-name">Mantenibilidad</div>
+        <div class="r-desc">10 code smells con 64 minutos de deuda tecnica. El codigo es facil de mantener y extender.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Radar chart -->
+  <div class="chart-panel" style="margin-bottom:28px">
+    <h2>Vision general de calidad</h2>
+    <canvas id="sonarRadar" height="160"></canvas>
+  </div>
+
+  <!-- Explanations -->
+  <div class="sonar-section">
+    <h2 style="margin-bottom:16px">Que significa cada dato</h2>
+
+    <div class="explain-row">
+      <div class="explain-icon">✅</div>
+      <div class="explain-body">
+        <strong>Quality Gate: Aprobado</strong>
+        <p>SonarCloud define umbrales minimos de calidad. Si el codigo los supera, el gate esta en verde. Esto significa que el proyecto cumple los estandares de calidad acordados para poder desplegarse a produccion.</p>
+      </div>
+    </div>
+
+    <div class="explain-row">
+      <div class="explain-icon">🐛</div>
+      <div class="explain-body">
+        <strong>Bugs (0)</strong>
+        <p>Errores de logica que SonarCloud detecta de forma estatica, sin ejecutar el codigo. Tener 0 bugs es el resultado ideal: significa que no hay patrones de comportamiento incorrecto identificables automaticamente.</p>
+      </div>
+    </div>
+
+    <div class="explain-row">
+      <div class="explain-icon">🔐</div>
+      <div class="explain-body">
+        <strong>Vulnerabilidades (4) — Requieren atencion</strong>
+        <p>Son puntos del codigo donde un atacante podria explotar una debilidad: manejo inseguro de datos, configuraciones expuestas, validaciones faltantes, etc. Con 4 vulnerabilidades la calificacion de seguridad es E, la mas baja. El equipo tiene identificadas estas vulnerabilidades y estan planificadas para el proximo sprint de seguridad.</p>
+      </div>
+    </div>
+
+    <div class="explain-row">
+      <div class="explain-icon">🔍</div>
+      <div class="explain-body">
+        <strong>Hotspot de Seguridad (1, 50% revisado)</strong>
+        <p>A diferencia de las vulnerabilidades, un hotspot es una zona que PODRIA ser riesgosa pero requiere revision humana para determinarlo. El equipo ya reviso el 50% del unico hotspot existente.</p>
+      </div>
+    </div>
+
+    <div class="explain-row">
+      <div class="explain-icon">🧹</div>
+      <div class="explain-body">
+        <strong>Code Smells (10) y Deuda Tecnica (64 min)</strong>
+        <p>Los code smells son practicas de escritura que no causan errores pero dificultan el mantenimiento futuro. La deuda tecnica es el tiempo estimado para corregirlos: 64 minutos sobre 2115 lineas de codigo es un resultado excelente, indica un codigo limpio y bien estructurado.</p>
+      </div>
+    </div>
+
+    <div class="explain-row">
+      <div class="explain-icon">📋</div>
+      <div class="explain-body">
+        <strong>Cobertura (91%) y Duplicacion (2.1%)</strong>
+        <p>SonarCloud confirma el 91% de cobertura de tests, alineado con el reporte JaCoCo. La duplicacion del 2.1% esta muy por debajo del umbral tipico del 3%, lo que indica que el equipo evita copiar y pegar codigo.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>Fuente: SonarCloud &nbsp;·&nbsp; sonarcloud.io/project/overview?id=ExamiaDev_Examia-Backend &nbsp;·&nbsp; Mayo 2026</footer>
+</div>
+
+<script>
+  /* ── helpers ── */
+  function color(pct) {
+    if (pct >= 80) return '#1a9e5e';
+    if (pct >= 50) return '#d97706';
+    return '#dc2626';
+  }
+  function wipAfterLabel(ctx) {
+    const bg = Array.isArray(ctx.dataset.backgroundColor)
+      ? ctx.dataset.backgroundColor[ctx.dataIndex]
+      : ctx.dataset.backgroundColor;
+    return (bg === '#d97706' || bg === '#f08c00') ? '  ⚠️ Work in progress' : null;
+  }
+  const GRID_COLOR = '#f0f2f8';
+  Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+  Chart.defaults.color = '#6b7a99';
+
+  /* ── DEV donut ── */
+  new Chart(document.getElementById('donutGlobal'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Cubiertas', 'Sin cubrir'],
+      datasets: [{ data: [93.8, 6.2], backgroundColor: ['#1a9e5e', '#e9ecf3'],
+                   borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: {
+      cutout: '72%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.toFixed(1)}%` } }
+      }
+    },
+    plugins: [{
+      id: 'centerText',
+      beforeDraw(chart) {
+        const { width, height, ctx } = chart;
+        ctx.save();
+        ctx.font = `800 ${height * 0.18}px 'Segoe UI', sans-serif`;
+        ctx.fillStyle = '#1a9e5e';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('93.8%', width / 2, height / 2);
+        ctx.restore();
+      }
+    }]
+  });
+
+  /* ── DEV bar by package ── */
+  const pkgLabels = ['controller','exception','model','scheduler','security','service'];
+  const pkgData   = [84.0, 83.3, 100.0, 80.0, 100.0, 96.2];
+  new Chart(document.getElementById('barPkg'), {
+    type: 'bar',
+    data: {
+      labels: pkgLabels,
+      datasets: [{
+        label: 'Lineas cubiertas (%)',
+        data: pkgData,
+        backgroundColor: pkgData.map(color),
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      scales: {
+        x: { min: 0, max: 100, grid: { color: GRID_COLOR },
+             ticks: { callback: v => v + '%' } },
+        y: { grid: { display: false } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toFixed(1)}%`, afterLabel: wipAfterLabel } }
+      }
+    }
+  });
+
+  /* ── DEV bar by class ── */
+  const clsLabels = [
+    'AuthController','ExamController','PasswordResetController',
+    'GlobalExceptionHandler','InvalidCredentials…','Unauthorized…','UserAlreadyExists…','InvalidResetCode…','ExamNotFound…','UserNotFound…',
+    'User','Exam','Question','PasswordResetToken','Role','QuestionType',
+    'KeepAliveScheduler',
+    'JwtAuthenticationFilter',
+    'ExamService','AuthService','JwtService','PasswordResetService'
+  ];
+  const clsData = [
+    100, 66.7, 100,
+    80, 100, 100, 100, 100, 100, 100,
+    100, 100, 100, 100, 100, 100,
+    80,
+    100,
+    93, 100, 100, 100
+  ];
+  new Chart(document.getElementById('barClasses'), {
+    type: 'bar',
+    data: {
+      labels: clsLabels,
+      datasets: [{
+        label: 'Lineas cubiertas (%)',
+        data: clsData,
+        backgroundColor: clsData.map(color),
+        borderRadius: 4,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      scales: {
+        y: { min: 0, max: 100, grid: { color: GRID_COLOR },
+             ticks: { callback: v => v + '%' } },
+        x: { grid: { display: false }, ticks: { maxRotation: 45, font: { size: 10 } } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(1)}%`, afterLabel: wipAfterLabel } }
+      }
+    }
+  });
+
+  /* ── CLIENT donut ── */
+  new Chart(document.getElementById('clientDonut'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Codigo probado', 'Sin probar'],
+      datasets: [{ data: [93.8, 6.2], backgroundColor: ['#1a9e5e', '#e9ecf3'],
+                   borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: {
+      cutout: '72%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.toFixed(1)}%` } }
+      }
+    },
+    plugins: [{
+      id: 'centerText',
+      beforeDraw(chart) {
+        const { width, height, ctx } = chart;
+        ctx.save();
+        ctx.font = `800 ${height * 0.18}px 'Segoe UI', sans-serif`;
+        ctx.fillStyle = '#1a9e5e';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('93.8%', width / 2, height / 2);
+        ctx.restore();
+      }
+    }]
+  });
+
+  /* ── CLIENT bar by area ── */
+  const areaLabels = ['Registracion','Login','Rec. Contraseña','Examenes','Seguridad','Modelos','Manejo errores'];
+  const areaData   = [100, 100, 100, 66.7, 100, 100, 83];
+  new Chart(document.getElementById('clientBar'), {
+    type: 'bar',
+    data: {
+      labels: areaLabels,
+      datasets: [{
+        label: 'Lineas cubiertas (%)',
+        data: areaData,
+        backgroundColor: ['#1a9e5e','#1a9e5e','#1a9e5e','#f08c00','#1a9e5e','#1a9e5e','#f08c00'],
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      scales: {
+        x: { min: 0, max: 100, grid: { color: GRID_COLOR },
+             ticks: { callback: v => v + '%' } },
+        y: { grid: { display: false } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x}%`, afterLabel: wipAfterLabel } }
+      }
+    }
+  });
+
+  /* ── SONAR chart ── */
+  new Chart(document.getElementById('sonarRadar'), {
+    type: 'radar',
+    data: {
+      labels: ['Confiabilidad', 'Cobertura', 'Mantenibilidad', 'Duplicacion\n(invertida)', 'Hotspots\nrevisados'],
+      datasets: [{
+        label: 'Examia Backend',
+        data: [100, 91, 100, 97.9, 50],
+        backgroundColor: 'rgba(26,158,94,0.15)',
+        borderColor: '#1a9e5e',
+        borderWidth: 2,
+        pointBackgroundColor: '#1a9e5e',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { stepSize: 25, font: { size: 10 } },
+          grid: { color: '#e9ecf3' },
+          pointLabels: { font: { size: 11 } }
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  /* ── Tab switch ── */
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>

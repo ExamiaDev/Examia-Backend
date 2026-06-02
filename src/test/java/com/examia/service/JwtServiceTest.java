@@ -2,12 +2,14 @@ package com.examia.service;
 
 import com.examia.model.Role;
 import com.examia.model.User;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -72,5 +74,38 @@ class JwtServiceTest {
         String token = jwtService.generateToken(user);
 
         assertFalse(jwtService.isTokenValid(token, otherUser));
+    }
+
+    @Test
+    void generateTokenWithExtraClaimsShouldIncludeSubject() {
+        User user = User.builder()
+                .email("docente@ejemplo.com")
+                .displayUsername("docente@ejemplo.com")
+                .password(USER_PASSWORD)
+                .role(Role.DOCENTE)
+                .enabled(true)
+                .build();
+
+        String token = jwtService.generateToken(Map.of("custom", "value"), user);
+
+        assertNotNull(token);
+        assertEquals("docente@ejemplo.com", jwtService.extractEmail(token));
+        assertTrue(jwtService.isTokenValid(token, user));
+    }
+
+    @Test
+    void extractEmailShouldThrowWhenTokenExpired() {
+        ReflectionTestUtils.setField(jwtService, "jwtExpiration", -1_000L);
+        User user = User.builder()
+                .email("usuario@ejemplo.com")
+                .displayUsername("usuario@ejemplo.com")
+                .password(USER_PASSWORD)
+                .role(Role.ALUMNO)
+                .enabled(true)
+                .build();
+
+        String token = jwtService.generateToken(user);
+
+        assertThrows(ExpiredJwtException.class, () -> jwtService.extractEmail(token));
     }
 }

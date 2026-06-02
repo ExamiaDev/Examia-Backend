@@ -3,6 +3,7 @@ package com.examia.controller;
 import com.examia.dto.*;
 import com.examia.model.Question;
 import com.examia.model.QuestionType;
+import com.examia.model.Role;
 import com.examia.model.User;
 import com.examia.service.ExamService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -177,6 +178,59 @@ class ExamControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"published\": true}")
                         .principal(() -> "profesor@test.com"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getExams_withSubjectFilter_returnsList() throws Exception {
+        List<ExamSummaryResponse> exams = Collections.singletonList(examSummaryResponse);
+        when(examService.getExamsByProfessorAndSubject(eq("subject-123"), any(User.class))).thenReturn(exams);
+
+        mockMvc.perform(get("/api/exams").param("subjectId", "subject-123")
+                        .principal(() -> "profesor@test.com"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getExams_withoutSubjectFilter_returnsList() throws Exception {
+        List<ExamSummaryResponse> exams = Collections.singletonList(examSummaryResponse);
+        when(examService.getExamsByProfessor(any(User.class))).thenReturn(exams);
+
+        mockMvc.perform(get("/api/exams").principal(() -> "profesor@test.com"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getExam_returnsExam() throws Exception {
+        when(examService.getExam(eq("exam-123"), any(User.class))).thenReturn(examResponse);
+
+        mockMvc.perform(get("/api/exams/exam-123").principal(() -> "profesor@test.com"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void updateExam_returnsUpdatedExam() throws Exception {
+        UpdateExamRequest update = UpdateExamRequest.builder()
+                .title("Actualizado")
+                .build();
+        examResponse.setTitle("Actualizado");
+        when(examService.updateExam(eq("exam-123"), any(UpdateExamRequest.class), any(User.class)))
+                .thenReturn(examResponse);
+
+        mockMvc.perform(put("/api/exams/exam-123")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(update))
+                        .principal(() -> "profesor@test.com"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getPublishedExams_returnsList() throws Exception {
+        examSummaryResponse.setPublished(true);
+        when(examService.getAllPublishedExams()).thenReturn(Collections.singletonList(examSummaryResponse));
+
+        mockMvc.perform(get("/api/exams/published")
+                        .principal(() -> "alumno@test.com"))
                 .andExpect(status().isOk());
     }
 

@@ -2,8 +2,12 @@ package com.examia.service;
 
 import com.examia.dto.GradeSubmissionRequest;
 import com.examia.dto.QuestionGradeRequest;
+import com.examia.dto.SubmissionSummaryResponse;
 import com.examia.dto.SubmitExamRequest;
 import com.examia.dto.StudentAnswerRequest;
+import com.examia.exception.ExamNotFoundException;
+import com.examia.exception.SubmissionNotFoundException;
+import com.examia.exception.UnauthorizedAccessException;
 import com.examia.model.DecisionTreeDefinition;
 import com.examia.model.DecisionTreeNode;
 import com.examia.model.Exam;
@@ -304,9 +308,180 @@ class SubmissionServiceTest {
         assertEquals(SubmissionStatus.GRADED, response.getStatus());
         assertEquals(5.0, response.getTotalScore());
         assertEquals("Excelente", response.getTeacherFeedback());
-        assertEquals(1, response.getAnswers().size());
-        assertEquals(5.0, response.getAnswers().get(0).getEarnedScore());
-        assertEquals("Bien hecho", response.getAnswers().get(0).getTeacherFeedback());
+        assertEquals(2, response.getAnswers().size());
+        var graded = response.getAnswers().stream()
+                .filter(a -> "q-tree".equals(a.getQuestionId()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(5.0, graded.getEarnedScore());
+        assertEquals("Bien hecho", graded.getTeacherFeedback());
+    }
+
+    @Test
+    void submitExam_whenExamNotFound_throwsExamNotFoundException() {
+        when(examRepository.findByIdAndActiveTrue("missing")).thenReturn(Optional.empty());
+
+        SubmitExamRequest request = SubmitExamRequest.builder()
+                .answers(List.of(StudentAnswerRequest.builder().questionId("q-tree").build()))
+                .build();
+
+        assertThrows(ExamNotFoundException.class,
+                () -> submissionService.submitExam("missing", request, student));
+    }
+
+    @Test
+    void submitExam_whenNotPublished_throwsUnauthorizedAccessException() {
+        exam.setPublished(false);
+        when(examRepository.findByIdAndActiveTrue(exam.getId())).thenReturn(Optional.of(exam));
+
+        SubmitExamRequest request = SubmitExamRequest.builder()
+                .answers(List.of(StudentAnswerRequest.builder().questionId("q-tree").build()))
+                .build();
+
+        assertThrows(UnauthorizedAccessException.class,
+                () -> submissionService.submitExam(exam.getId(), request, student));
+    }
+
+    @Test
+    void submitExam_whenAlreadySubmitted_throwsIllegalStateException() {
+        when(examRepository.findByIdAndActiveTrue(exam.getId())).thenReturn(Optional.of(exam));
+        when(submissionRepository.findByExamIdAndStudentIdAndActiveTrue(exam.getId(), student.getId()))
+                .thenReturn(Optional.of(Submission.builder().id("existing").build()));
+
+        SubmitExamRequest request = SubmitExamRequest.builder()
+                .answers(List.of(StudentAnswerRequest.builder().questionId("q-tree").build()))
+                .build();
+
+        assertThrows(IllegalStateException.class,
+                () -> submissionService.submitExam(exam.getId(), request, student));
+    }
+
+    @Test
+    void submitExam_persistsDecisionTreeAndMatrixFields() {
+        DecisionTreeDefinition tree = DecisionTreeDefinition.builder()
+                .rootId("n1")
+                .nodes(Map.of("n1", DecisionTreeNode.builder().text("Alumno").branches(List.of()).build()))
+                .build();
+
+        when(examRepository.findByIdAndActiveTrue(exam.getId())).thenReturn(Optional.of(exam));
+        when(submissionRepository.findByExamIdAndStudentIdAndActiveTrue(exam.getId(), student.getId()))
+                .thenReturn(Optional.empty());
+        when(submissionRepository.save(any(Submission.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        SubmitExamRequest request = SubmitExamRequest.builder()
+                .answers(List.of(
+                        StudentAnswerRequest.builder()
+                                .questionId("q-tree")
+                                .decisionTree(tree)
+                                .build(),
+                        StudentAnswerRequest.builder()
+                                .questionId("q-matrix")
+                                .matrixColumnHeaders(List.of("C1", "C2"))
+                                .matrixRows(List.of(List.of("a", "b")))
+                                .build()
+                ))
+                .build();
+
+        submissionService.submitExam(exam.getId(), request, student);
+
+        ArgumentCaptor<Submission> captor = ArgumentCaptor.forClass(Submission.class);
+        verify(submissionRepository).save(captor.capture());
+        StudentAnswer treeAnswer = captor.getValue().getAnswers().get(0);
+        assertEquals("Alumno", treeAnswer.getDecisionTree().getNodes().get("n1").getText());
+        StudentAnswer matrixAnswer = captor.getValue().getAnswers().get(1);
+        assertEquals(List.of("C1", "C2"), matrixAnswer.getMatrixColumnHeaders());
+    }
+
+    @Test
+    void getSubmissions_whenProfessorNotOwner_throwsUnauthorizedAccessException() {
+        User otherProfessor = User.builder().id("other-prof").role(Role.DOCENTE).build();
+        when(examRepository.findByIdAndActiveTrue(exam.getId())).thenReturn(Optional.of(exam));
+
+        assertThrows(UnauthorizedAccessException.class,
+                () -> submissionService.getSubmissions(exam.getId(), otherProfessor));
+    }
+
+    @Test
+    void getSubmission_whenSubmissionBelongsToOtherExam_throwsSubmissionNotFoundException() {
+        User professor = User.builder().id("prof-123").role(Role.DOCENTE).build();
+        Submission submission = Submission.builder()
+                .id("sub-456")
+                .examId("other-exam")
+                .studentId(student.getId())
+                .build();
+
+        when(examRepository.findByIdAndActiveTrue(exam.getId())).thenReturn(Optional.of(exam));
+        when(submissionRepository.findByIdAndActiveTrue("sub-456")).thenReturn(Optional.of(submission));
+
+        assertThrows(SubmissionNotFoundException.class,
+                () -> submissionService.getSubmission(exam.getId(), "sub-456", professor));
+    }
+
+    @Test
+    void getMySubmission_whenOtherStudent_throwsUnauthorizedAccessException() {
+        Submission submission = Submission.builder()
+                .id("sub-654")
+                .examId(exam.getId())
+                .studentId("other-student")
+                .build();
+
+        when(submissionRepository.findByIdAndActiveTrue("sub-654")).thenReturn(Optional.of(submission));
+
+        assertThrows(UnauthorizedAccessException.class,
+                () -> submissionService.getMySubmission("sub-654", student));
+    }
+
+    @Test
+    void getSubmissions_whenStudentDeleted_usesFallbackName() {
+        User professor = User.builder().id("prof-123").role(Role.DOCENTE).build();
+        Submission submission = Submission.builder()
+                .id("sub-123")
+                .examId(exam.getId())
+                .studentId("deleted-student")
+                .status(SubmissionStatus.SUBMITTED)
+                .submittedAt(LocalDateTime.now())
+                .build();
+
+        when(examRepository.findByIdAndActiveTrue(exam.getId())).thenReturn(Optional.of(exam));
+        when(submissionRepository.findByExamIdAndActiveTrue(exam.getId())).thenReturn(List.of(submission));
+        when(userRepository.findById("deleted-student")).thenReturn(Optional.empty());
+
+        List<SubmissionSummaryResponse> summaries = submissionService.getSubmissions(exam.getId(), professor);
+
+        assertEquals("Usuario eliminado", summaries.get(0).getStudentName());
+        assertNull(summaries.get(0).getStudentLegajo());
+    }
+
+    @Test
+    void getSubmission_resolvesAnswerByIndexWhenQuestionIdChanged() {
+        User professor = User.builder().id("prof-123").role(Role.DOCENTE).build();
+        Question q1 = Question.builder().id("new-id-1").type(QuestionType.DECISION_TREE).text("Q1").order(0).points(5.0).build();
+        Question q2 = Question.builder().id("new-id-2").type(QuestionType.MATRIX).text("Q2").order(1).points(5.0).build();
+        Exam updatedExam = Exam.builder()
+                .id(exam.getId())
+                .professorId("prof-123")
+                .questions(List.of(q1, q2))
+                .build();
+
+        Submission submission = Submission.builder()
+                .id("sub-index")
+                .examId(exam.getId())
+                .studentId(student.getId())
+                .answers(List.of(
+                        StudentAnswer.builder().questionId("old-id-1").textAnswer("resp1").build(),
+                        StudentAnswer.builder().questionId("old-id-2").textAnswer("resp2").build()
+                ))
+                .build();
+
+        when(examRepository.findByIdAndActiveTrue(exam.getId())).thenReturn(Optional.of(updatedExam));
+        when(submissionRepository.findByIdAndActiveTrue("sub-index")).thenReturn(Optional.of(submission));
+        when(userRepository.findById(student.getId())).thenReturn(Optional.of(student));
+
+        var response = submissionService.getSubmission(exam.getId(), "sub-index", professor);
+
+        assertEquals("resp1", response.getAnswers().get(0).getTextAnswer());
+        assertEquals("resp2", response.getAnswers().get(1).getTextAnswer());
     }
 
     @Test

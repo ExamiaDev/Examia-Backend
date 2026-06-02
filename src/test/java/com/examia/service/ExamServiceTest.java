@@ -3,7 +3,13 @@ package com.examia.service;
 import com.examia.dto.*;
 import com.examia.exception.ExamNotFoundException;
 import com.examia.exception.UnauthorizedAccessException;
-import com.examia.model.*;
+import com.examia.model.DecisionTreeDefinition;
+import com.examia.model.DecisionTreeNode;
+import com.examia.model.Exam;
+import com.examia.model.Question;
+import com.examia.model.QuestionType;
+import com.examia.model.Role;
+import com.examia.model.User;
 import com.examia.repository.ExamRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -356,6 +362,128 @@ class ExamServiceTest {
 
         assertThrows(UnauthorizedAccessException.class,
                 () -> examService.duplicateExam("exam-123", otherProfessor));
+    }
+
+    @Test
+    void getAllPublishedExams_returnsList() {
+        exam.setPublished(true);
+        when(examRepository.findByPublishedTrueAndActiveTrue()).thenReturn(Collections.singletonList(exam));
+
+        List<ExamSummaryResponse> response = examService.getAllPublishedExams();
+
+        assertEquals(1, response.size());
+        assertEquals("exam-123", response.get(0).getId());
+    }
+
+    @Test
+    void getExam_asStudentSanitizesDecisionTreeAndMatrix() {
+        DecisionTreeDefinition tree = DecisionTreeDefinition.builder()
+                .rootId("n1")
+                .nodes(Map.of("n1", DecisionTreeNode.builder().text("secreto").branches(List.of()).build()))
+                .build();
+        Question treeQ = Question.builder()
+                .id("q-tree")
+                .type(QuestionType.DECISION_TREE)
+                .text("Árbol")
+                .decisionTree(tree)
+                .correctOrder(List.of("A", "B"))
+                .points(5.0)
+                .build();
+        Question matrixQ = Question.builder()
+                .id("q-matrix")
+                .type(QuestionType.MATRIX)
+                .text("Tabla")
+                .matrixColumnHeaders(List.of("H1"))
+                .matrixRows(List.of(List.of("v")))
+                .matchingPairs(Map.of("k", "v"))
+                .points(5.0)
+                .build();
+        exam.setPublished(true);
+        exam.setQuestions(List.of(treeQ, matrixQ));
+        when(examRepository.findByIdAndActiveTrue("exam-123")).thenReturn(Optional.of(exam));
+
+        ExamResponse response = examService.getExam("exam-123", student);
+
+        assertNull(response.getQuestions().get(0).getDecisionTree());
+        assertNull(response.getQuestions().get(0).getCorrectOrder());
+        assertNull(response.getQuestions().get(1).getMatrixColumnHeaders());
+        assertNull(response.getQuestions().get(1).getMatrixRows());
+        assertNull(response.getQuestions().get(1).getMatchingPairs());
+    }
+
+    @Test
+    void updateExam_withAllOptionalFields_updatesExam() {
+        UpdateExamRequest fullUpdate = UpdateExamRequest.builder()
+                .title("Título nuevo")
+                .description("Desc")
+                .subjectId("sub-2")
+                .subjectName("Materia 2")
+                .durationMinutes(90)
+                .passingScore(70.0)
+                .published(true)
+                .shuffleQuestions(true)
+                .shuffleOptions(true)
+                .showResultsOnCompletion(true)
+                .maxAttempts(2)
+                .shift("Mañana")
+                .questions(Collections.singletonList(QuestionRequest.builder()
+                        .type(QuestionType.LONG_ANSWER)
+                        .text("Desarrollo")
+                        .points(8.0)
+                        .build()))
+                .build();
+
+        when(examRepository.findByIdAndActiveTrue("exam-123")).thenReturn(Optional.of(exam));
+        when(examRepository.save(any(Exam.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ExamResponse response = examService.updateExam("exam-123", fullUpdate, professor);
+
+        assertEquals("Título nuevo", response.getTitle());
+        assertEquals(8.0, response.getTotalPoints());
+        assertTrue(response.isPublished());
+    }
+
+    @Test
+    void createExam_withDecisionTreeAndMatrix_mapsAllFields() {
+        QuestionRequest treeReq = QuestionRequest.builder()
+                .type(QuestionType.DECISION_TREE)
+                .text("Árbol")
+                .decisionTree(DecisionTreeDefinition.builder()
+                        .rootId("n1")
+                        .nodes(Map.of("n1", DecisionTreeNode.builder().text("root").branches(List.of()).build()))
+                        .build())
+                .points(4.0)
+                .build();
+        QuestionRequest matrixReq = QuestionRequest.builder()
+                .type(QuestionType.MATRIX)
+                .text("Tabla")
+                .matrixColumnHeaders(List.of("A", "B"))
+                .matrixRows(List.of(List.of("1", "2")))
+                .points(6.0)
+                .build();
+        createExamRequest.setQuestions(List.of(treeReq, matrixReq));
+
+        when(examRepository.save(any(Exam.class))).thenAnswer(invocation -> {
+            Exam saved = invocation.getArgument(0);
+            saved.setId("exam-new");
+            return saved;
+        });
+
+        ExamResponse response = examService.createExam(createExamRequest, professor);
+
+        assertEquals(10.0, response.getTotalPoints());
+        assertEquals(2, response.getQuestions().size());
+        assertEquals(QuestionType.DECISION_TREE, response.getQuestions().get(0).getType());
+        assertEquals(QuestionType.MATRIX, response.getQuestions().get(1).getType());
+    }
+
+    @Test
+    void togglePublish_asProfessorNotOwner_throwsUnauthorizedAccessException() {
+        User otherProfessor = User.builder().id("other-prof").role(Role.DOCENTE).build();
+        when(examRepository.findByIdAndActiveTrue("exam-123")).thenReturn(Optional.of(exam));
+
+        assertThrows(UnauthorizedAccessException.class,
+                () -> examService.togglePublish("exam-123", true, otherProfessor));
     }
 }
 

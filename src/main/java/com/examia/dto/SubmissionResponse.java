@@ -67,12 +67,17 @@ public class SubmissionResponse {
         private List<String> correctOrder;
         private DecisionTreeDefinition decisionTree;
         private Map<String, String> matchingPairs;
+        private List<String> matrixColumnHeaders;
+        private List<List<String>> matrixRows;
 
         // Respuesta del alumno
         private List<Integer> selectedOptions;
         private String textAnswer;
         private List<String> orderAnswer;
         private Map<String, String> matchingAnswer;
+        private DecisionTreeDefinition studentDecisionTree;
+        private List<String> studentMatrixColumnHeaders;
+        private List<List<String>> studentMatrixRows;
 
         // Calificación
         private Double earnedScore;

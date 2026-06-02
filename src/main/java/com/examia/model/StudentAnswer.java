@@ -33,6 +33,14 @@ public class StudentAnswer {
     /** Pares ingresados por el alumno (MATCHING) */
     private Map<String, String> matchingAnswer;
 
+    /** Árbol armado por el alumno (DECISION_TREE) */
+    private DecisionTreeDefinition decisionTree;
+
+    /** Tabla armada por el alumno (MATRIX) */
+    private List<String> matrixColumnHeaders;
+
+    private List<List<String>> matrixRows;
+
     /** Puntaje obtenido en esta pregunta (asignado por el docente o auto-corrección) */
     private Double earnedScore;
 

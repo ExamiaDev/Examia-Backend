@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.examia.model.DecisionTreeDefinition;
 import java.util.List;
 import java.util.Map;
 
@@ -29,4 +30,12 @@ public class StudentAnswerRequest {
 
     /** Para MATCHING */
     private Map<String, String> matchingAnswer;
+
+    /** Para DECISION_TREE: árbol creado por el alumno */
+    private DecisionTreeDefinition decisionTree;
+
+    /** Para MATRIX: tabla creada por el alumno */
+    private List<String> matrixColumnHeaders;
+
+    private List<List<String>> matrixRows;
 }

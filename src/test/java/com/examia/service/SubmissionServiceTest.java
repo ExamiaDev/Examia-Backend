@@ -4,6 +4,8 @@ import com.examia.dto.GradeSubmissionRequest;
 import com.examia.dto.QuestionGradeRequest;
 import com.examia.dto.SubmitExamRequest;
 import com.examia.dto.StudentAnswerRequest;
+import com.examia.model.DecisionTreeDefinition;
+import com.examia.model.DecisionTreeNode;
 import com.examia.model.Exam;
 import com.examia.model.Question;
 import com.examia.model.QuestionType;
@@ -163,6 +165,84 @@ class SubmissionServiceTest {
         assertEquals("sub-123", summaries.get(0).getId());
         assertEquals("María García", summaries.get(0).getStudentName());
         assertEquals(exam.getTitle(), summaries.get(0).getExamTitle());
+    }
+
+    @Test
+    void getSubmission_includesStudentTreeAndMatrixFields() {
+        User professor = User.builder().id("prof-123").role(Role.DOCENTE).build();
+
+        DecisionTreeDefinition profTree = DecisionTreeDefinition.builder()
+                .rootId("n1")
+                .nodes(Map.of("n1", DecisionTreeNode.builder().text("Guía profe").branches(List.of()).build()))
+                .build();
+        DecisionTreeDefinition studentTree = DecisionTreeDefinition.builder()
+                .rootId("n1")
+                .nodes(Map.of("n1", DecisionTreeNode.builder().text("Árbol alumno").branches(List.of()).build()))
+                .build();
+
+        Question treeQuestion = Question.builder()
+                .id("q-tree")
+                .type(QuestionType.DECISION_TREE)
+                .text("Árbol")
+                .order(0)
+                .decisionTree(profTree)
+                .points(5.0)
+                .build();
+
+        Question matrixQuestion = Question.builder()
+                .id("q-matrix")
+                .type(QuestionType.MATRIX)
+                .text("Tabla")
+                .order(1)
+                .matrixColumnHeaders(List.of("A", "B"))
+                .matrixRows(List.of(List.of("1", "2")))
+                .points(5.0)
+                .build();
+
+        Exam treeExam = Exam.builder()
+                .id("exam-tree")
+                .title("Examen árbol/tabla")
+                .professorId("prof-123")
+                .questions(List.of(treeQuestion, matrixQuestion))
+                .published(true)
+                .active(true)
+                .build();
+
+        Submission submission = Submission.builder()
+                .id("sub-tree")
+                .examId(treeExam.getId())
+                .studentId(student.getId())
+                .status(SubmissionStatus.SUBMITTED)
+                .submittedAt(LocalDateTime.now())
+                .answers(List.of(
+                        StudentAnswer.builder()
+                                .questionId("q-tree")
+                                .decisionTree(studentTree)
+                                .build(),
+                        StudentAnswer.builder()
+                                .questionId("q-matrix")
+                                .matrixColumnHeaders(List.of("X", "Y"))
+                                .matrixRows(List.of(List.of("a", "b")))
+                                .build()
+                ))
+                .build();
+
+        when(examRepository.findByIdAndActiveTrue(treeExam.getId())).thenReturn(Optional.of(treeExam));
+        when(submissionRepository.findByIdAndActiveTrue("sub-tree")).thenReturn(Optional.of(submission));
+        when(userRepository.findById(student.getId())).thenReturn(Optional.of(student));
+
+        var response = submissionService.getSubmission(treeExam.getId(), "sub-tree", professor);
+
+        assertEquals(2, response.getAnswers().size());
+
+        var treeAnswer = response.getAnswers().get(0);
+        assertEquals("Guía profe", treeAnswer.getDecisionTree().getNodes().get("n1").getText());
+        assertEquals("Árbol alumno", treeAnswer.getStudentDecisionTree().getNodes().get("n1").getText());
+
+        var matrixAnswer = response.getAnswers().get(1);
+        assertEquals(List.of("A", "B"), matrixAnswer.getMatrixColumnHeaders());
+        assertEquals(List.of("X", "Y"), matrixAnswer.getStudentMatrixColumnHeaders());
+        assertEquals(List.of(List.of("a", "b")), matrixAnswer.getStudentMatrixRows());
     }
 
     @Test

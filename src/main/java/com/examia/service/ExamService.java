@@ -5,6 +5,7 @@ import com.examia.exception.ExamNotFoundException;
 import com.examia.exception.UnauthorizedAccessException;
 import com.examia.model.Exam;
 import com.examia.model.Question;
+import com.examia.model.QuestionType;
 import com.examia.model.Role;
 import com.examia.model.User;
 import com.examia.repository.ExamRepository;
@@ -89,6 +90,7 @@ public class ExamService {
                 throw new UnauthorizedAccessException(
                         "Este examen no está disponible");
             }
+            sanitizeQuestionsForStudent(exam);
         }
 
         return buildExamResponse(exam, null);
@@ -350,6 +352,22 @@ public class ExamService {
         if (user.getRole() != Role.DOCENTE) {
             throw new UnauthorizedAccessException(
                     "Solo los profesores pueden realizar esta acción");
+        }
+    }
+
+    /** Oculta respuestas de referencia del docente en preguntas MATRIX y DECISION_TREE. */
+    private void sanitizeQuestionsForStudent(Exam exam) {
+        if (exam.getQuestions() == null) return;
+        for (Question q : exam.getQuestions()) {
+            if (q.getType() == QuestionType.DECISION_TREE) {
+                q.setDecisionTree(null);
+                q.setCorrectOrder(null);
+            }
+            if (q.getType() == QuestionType.MATRIX) {
+                q.setMatrixColumnHeaders(null);
+                q.setMatrixRows(null);
+                q.setMatchingPairs(null);
+            }
         }
     }
 

@@ -112,6 +112,9 @@ public class SubmissionService {
                         .textAnswer(a.getTextAnswer())
                         .orderAnswer(a.getOrderAnswer())
                         .matchingAnswer(a.getMatchingAnswer())
+                        .decisionTree(a.getDecisionTree())
+                        .matrixColumnHeaders(a.getMatrixColumnHeaders())
+                        .matrixRows(a.getMatrixRows())
                         .build())
                 .toList();
 
@@ -202,11 +205,12 @@ public class SubmissionService {
     }
 
     private SubmissionResponse buildFullResponse(Submission submission, Exam exam, User student) {
+        List<StudentAnswer> rawAnswers = submission.getAnswers() == null ? List.of() : submission.getAnswers();
+
         // Indexar respuestas del alumno por questionId
-        Map<String, StudentAnswer> answerMap = submission.getAnswers() == null
-                ? Map.of()
-                : submission.getAnswers().stream()
-                        .collect(Collectors.toMap(StudentAnswer::getQuestionId, a -> a, (a, b) -> a));
+        Map<String, StudentAnswer> answerMap = rawAnswers.stream()
+                .filter(a -> a.getQuestionId() != null)
+                .collect(Collectors.toMap(StudentAnswer::getQuestionId, a -> a, (a, b) -> a));
 
         // Ordenar preguntas y combinar con respuestas del alumno
         List<Question> ordered = exam.getQuestions() == null ? List.of() : exam.getQuestions().stream()
@@ -215,32 +219,41 @@ public class SubmissionService {
 
         List<SubmissionResponse.AnswerWithQuestionDto> answers = new ArrayList<>();
         int displayOrder = 1;
-        for (Question q : ordered) {
-            StudentAnswer sa = answerMap.get(q.getId());
-            if (sa == null) continue;
+        for (int qi = 0; qi < ordered.size(); qi++) {
+            Question q = ordered.get(qi);
+            StudentAnswer sa = resolveStudentAnswer(q, qi, answerMap, rawAnswers, ordered.size());
 
-            answers.add(SubmissionResponse.AnswerWithQuestionDto.builder()
-                    .questionId(q.getId())
-                    .order(displayOrder++)
-                    .topic(q.getTopic())
-                    .questionText(q.getText())
-                    .questionType(q.getType())
-                    .points(q.getPoints())
-                    .options(q.getOptions())
-                    .correctAnswers(q.getCorrectAnswers())
-                    .correctTextAnswer(q.getCorrectTextAnswer())
-                    .correctOrder(q.getCorrectOrder())
-                    .decisionTree(q.getDecisionTree())
-                    .matchingPairs(q.getMatchingPairs())
-                    .matrixColumnHeaders(q.getMatrixColumnHeaders())
-                    .matrixRows(q.getMatrixRows())
-                    .selectedOptions(sa.getSelectedOptions())
-                    .textAnswer(sa.getTextAnswer())
-                    .orderAnswer(sa.getOrderAnswer())
-                    .matchingAnswer(sa.getMatchingAnswer())
-                    .earnedScore(sa.getEarnedScore())
-                    .teacherFeedback(sa.getTeacherFeedback())
-                    .build());
+            SubmissionResponse.AnswerWithQuestionDto.AnswerWithQuestionDtoBuilder builder =
+                    SubmissionResponse.AnswerWithQuestionDto.builder()
+                            .questionId(q.getId())
+                            .order(displayOrder++)
+                            .topic(q.getTopic())
+                            .questionText(q.getText())
+                            .questionType(q.getType())
+                            .points(q.getPoints())
+                            .options(q.getOptions())
+                            .correctAnswers(q.getCorrectAnswers())
+                            .correctTextAnswer(q.getCorrectTextAnswer())
+                            .correctOrder(q.getCorrectOrder())
+                            .decisionTree(q.getDecisionTree())
+                            .matchingPairs(q.getMatchingPairs())
+                            .matrixColumnHeaders(q.getMatrixColumnHeaders())
+                            .matrixRows(q.getMatrixRows());
+
+            if (sa != null) {
+                builder
+                        .selectedOptions(sa.getSelectedOptions())
+                        .textAnswer(sa.getTextAnswer())
+                        .orderAnswer(sa.getOrderAnswer())
+                        .matchingAnswer(sa.getMatchingAnswer())
+                        .studentDecisionTree(sa.getDecisionTree())
+                        .studentMatrixColumnHeaders(sa.getMatrixColumnHeaders())
+                        .studentMatrixRows(sa.getMatrixRows())
+                        .earnedScore(sa.getEarnedScore())
+                        .teacherFeedback(sa.getTeacherFeedback());
+            }
+
+            answers.add(builder.build());
         }
 
         SubmissionResponse.StudentInfoDto studentDto = null;
@@ -266,5 +279,30 @@ public class SubmissionService {
                 .gradedAt(submission.getGradedAt())
                 .answers(answers)
                 .build();
+    }
+
+    /**
+     * Busca la respuesta del alumno por questionId; si el examen se editó y cambió el id,
+     * intenta emparejar por posición cuando hay la misma cantidad de respuestas que preguntas.
+     */
+    private StudentAnswer resolveStudentAnswer(
+            Question question,
+            int questionIndex,
+            Map<String, StudentAnswer> answerMap,
+            List<StudentAnswer> rawAnswers,
+            int questionCount) {
+
+        StudentAnswer byId = answerMap.get(question.getId());
+        if (byId != null) {
+            return byId;
+        }
+
+        if (rawAnswers.size() == questionCount
+                && questionIndex >= 0
+                && questionIndex < rawAnswers.size()) {
+            return rawAnswers.get(questionIndex);
+        }
+
+        return null;
     }
 }

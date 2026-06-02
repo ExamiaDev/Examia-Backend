@@ -75,6 +75,9 @@ public class SubmissionResponse {
         private String textAnswer;
         private List<String> orderAnswer;
         private Map<String, String> matchingAnswer;
+        private DecisionTreeDefinition studentDecisionTree;
+        private List<String> studentMatrixColumnHeaders;
+        private List<List<String>> studentMatrixRows;
 
         // Calificación
         private Double earnedScore;

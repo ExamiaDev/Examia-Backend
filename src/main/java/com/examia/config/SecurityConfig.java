@@ -36,7 +36,13 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(
-                    "/api/auth/**",
+                    "/api/auth/login",
+                    "/api/auth/login-uade",
+                    "/api/auth/register",
+                    "/api/auth/health",
+                    "/api/auth/forgot-password",
+                    "/api/auth/verify-reset-code",
+                    "/api/auth/reset-password",
                     "/actuator/health",
                     "/actuator/info",
                     "/error",

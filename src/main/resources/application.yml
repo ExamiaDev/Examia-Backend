@@ -5,6 +5,7 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017/examia}
+      auto-index-creation: false
 
   # Mail configuration (Gmail SMTP)
   mail:
@@ -33,6 +34,12 @@ spring:
 # Server configuration
 server:
   port: ${PORT:8080}
+  tomcat:
+    threads:
+      max: ${TOMCAT_THREADS_MAX:100}
+      min-spare: ${TOMCAT_THREADS_MIN:10}
+    accept-count: ${TOMCAT_ACCEPT_COUNT:50}
+    connection-timeout: ${TOMCAT_CONNECTION_TIMEOUT:5000}
 
 # JWT Configuration
 jwt:

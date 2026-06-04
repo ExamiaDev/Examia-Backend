@@ -16,6 +16,7 @@ public class AsyncMailSender {
     @Value("${mail.from:${spring.mail.username}}")
     private String mailFrom;
 
+    @Async
     public void send(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(mailFrom);

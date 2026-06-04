@@ -112,7 +112,7 @@ public class GlobalExceptionHandler {
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("error", "Bad Request");
+        response.put("error", BAD_REQUEST);
         response.put("message", "Error de validación");
         response.put("errors", errors);
         response.put("timestamp", LocalDateTime.now());

@@ -12,10 +12,11 @@ import com.examia.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 
 class AuthControllerTest {
@@ -207,6 +208,40 @@ class AuthControllerTest {
         );
 
         assertTrue(exception.getMessage().contains("contraseña"));
+    }
+
+    // ==================== TESTS DE LOGOUT ====================
+
+    @Test
+    void logoutWhenBearerTokenPresentShouldCallServiceAndReturnNoContent() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer valid-token");
+
+        ResponseEntity<Void> response = controller.logout(request);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(authService).logout("valid-token");
+    }
+
+    @Test
+    void logoutWhenNoAuthorizationHeaderShouldReturnNoContentWithoutCallingService() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        ResponseEntity<Void> response = controller.logout(request);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(authService, never()).logout(any());
+    }
+
+    @Test
+    void logoutWhenNonBearerHeaderShouldReturnNoContentWithoutCallingService() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Basic dXNlcjpwYXNz");
+
+        ResponseEntity<Void> response = controller.logout(request);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(authService, never()).logout(any());
     }
 
     private LoginRequest validLoginRequest() {

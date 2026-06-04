@@ -43,7 +43,9 @@ public class ApplicationConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // Strength 8 (256 iteraciones) es 4x más rápido que el default 10 (1024 iteraciones).
+        // Adecuado para sistema institucional con política de contraseñas (BUG-14).
+        return new BCryptPasswordEncoder(8);
     }
 }
 

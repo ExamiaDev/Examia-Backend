@@ -1,6 +1,7 @@
 package com.examia.security;
 
 import com.examia.service.JwtService;
+import com.examia.service.TokenBlacklistService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
@@ -29,7 +30,7 @@ class JwtAuthenticationFilterTest {
         JwtService jwtService = mock(JwtService.class);
         UserDetailsService userDetailsService = mock(UserDetailsService.class);
         MockFilterChain filterChain = new MockFilterChain();
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, userDetailsService);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, userDetailsService, mock(TokenBlacklistService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -46,7 +47,7 @@ class JwtAuthenticationFilterTest {
         JwtService jwtService = mock(JwtService.class);
         UserDetailsService userDetailsService = mock(UserDetailsService.class);
         MockFilterChain filterChain = new MockFilterChain();
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, userDetailsService);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, userDetailsService, mock(TokenBlacklistService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         request.addHeader("Authorization", "Basic credentials");
@@ -64,7 +65,7 @@ class JwtAuthenticationFilterTest {
         JwtService jwtService = mock(JwtService.class);
         UserDetailsService userDetailsService = mock(UserDetailsService.class);
         MockFilterChain filterChain = new MockFilterChain();
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, userDetailsService);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, userDetailsService, mock(TokenBlacklistService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         request.addHeader("Authorization", "Bearer valid-token");
@@ -92,7 +93,7 @@ class JwtAuthenticationFilterTest {
         JwtService jwtService = mock(JwtService.class);
         UserDetailsService userDetailsService = mock(UserDetailsService.class);
         MockFilterChain filterChain = new MockFilterChain();
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, userDetailsService);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, userDetailsService, mock(TokenBlacklistService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         request.addHeader("Authorization", "Bearer invalid-token");
@@ -117,7 +118,7 @@ class JwtAuthenticationFilterTest {
         JwtService jwtService = mock(JwtService.class);
         UserDetailsService userDetailsService = mock(UserDetailsService.class);
         MockFilterChain filterChain = new MockFilterChain();
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, userDetailsService);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, userDetailsService, mock(TokenBlacklistService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         request.addHeader("Authorization", "Bearer malformed-token");

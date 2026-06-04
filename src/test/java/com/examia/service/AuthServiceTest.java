@@ -6,7 +6,6 @@ import com.examia.dto.LoginUadeRequest;
 import com.examia.dto.RegisterRequest;
 import com.examia.exception.InvalidCredentialsException;
 import com.examia.exception.UserAlreadyExistsException;
-import com.examia.exception.UserNotFoundException;
 import com.examia.model.Role;
 import com.examia.model.User;
 import com.examia.repository.UserRepository;
@@ -14,6 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,6 +26,7 @@ class AuthServiceTest {
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private StubJwtService jwtService;
+    private TokenBlacklistService tokenBlacklistService;
     private AuthService authService;
     private LoginRequest loginRequest;
     private RegisterRequest registerRequest;
@@ -34,7 +36,8 @@ class AuthServiceTest {
         userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         jwtService = new StubJwtService("token-123");
-        authService = new AuthService(userRepository, passwordEncoder, jwtService);
+        tokenBlacklistService = mock(TokenBlacklistService.class);
+        authService = new AuthService(userRepository, passwordEncoder, jwtService, tokenBlacklistService);
 
         loginRequest = LoginRequest.builder()
                 .email("usuario@ejemplo.com")
@@ -170,12 +173,12 @@ class AuthServiceTest {
     void loginWhenUserNotFoundShouldThrowUserNotFoundException() {
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
 
-        UserNotFoundException exception = assertThrows(
-                UserNotFoundException.class,
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
                 () -> authService.login(loginRequest)
         );
 
-        assertTrue(exception.getMessage().contains(loginRequest.getEmail()));
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -197,7 +200,7 @@ class AuthServiceTest {
                 () -> authService.login(loginRequest)
         );
 
-        assertTrue(exception.getMessage().contains("contrase\u00f1a"));
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -266,12 +269,12 @@ class AuthServiceTest {
 
         when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.empty());
 
-        UserNotFoundException exception = assertThrows(
-                UserNotFoundException.class,
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
                 () -> authService.loginUade(loginUadeRequest)
         );
 
-        assertTrue(exception.getMessage().contains("999999"));
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -299,7 +302,7 @@ class AuthServiceTest {
                 () -> authService.loginUade(loginUadeRequest)
         );
 
-        assertTrue(exception.getMessage().contains("email"));
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -328,7 +331,7 @@ class AuthServiceTest {
                 () -> authService.loginUade(loginUadeRequest)
         );
 
-        assertTrue(exception.getMessage().contains("contraseña"));
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -385,8 +388,121 @@ class AuthServiceTest {
         verify(userRepository).save(any(User.class));
     }
 
+    // ==================== TESTS DE LOGOUT ====================
+
+    @Test
+    void logoutShouldRevokeToken() {
+        Date expiration = new Date(System.currentTimeMillis() + 3600_000);
+        jwtService.setExpiration(expiration);
+
+        authService.logout("some-jwt-token");
+
+        verify(tokenBlacklistService).revokeToken("some-jwt-token", expiration);
+    }
+
+    // ==================== TESTS DE BLOQUEO DE CUENTA ====================
+
+    @Test
+    void loginWhenAccountIsLockedShouldThrowInvalidCredentialsException() {
+        User existingUser = User.builder()
+                .email(loginRequest.getEmail())
+                .password(ENCODED_PASSWORD)
+                .role(Role.DOCENTE)
+                .enabled(true)
+                .failedAttempts(4)
+                .lockedUntil(LocalDateTime.now().plusMinutes(5))
+                .build();
+
+        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(existingUser));
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> authService.login(loginRequest)
+        );
+
+        assertTrue(exception.getMessage().contains("bloqueada"));
+    }
+
+    @Test
+    void loginWhenLockExpiredShouldResetAttemptsAndProceed() {
+        User existingUser = User.builder()
+                .email(loginRequest.getEmail())
+                .password(ENCODED_PASSWORD)
+                .role(Role.DOCENTE)
+                .enabled(true)
+                .failedAttempts(4)
+                .lockedUntil(LocalDateTime.now().minusMinutes(1))
+                .build();
+
+        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches(loginRequest.getPassword(), existingUser.getPassword())).thenReturn(true);
+        jwtService.setToken("token-after-lock-expired");
+
+        AuthResponse response = authService.login(loginRequest);
+
+        assertEquals("token-after-lock-expired", response.getToken());
+        verify(userRepository, atLeastOnce()).save(any(User.class));
+    }
+
+    @Test
+    void loginWhenFourthFailedAttemptShouldLockAccount() {
+        User existingUser = User.builder()
+                .email(loginRequest.getEmail())
+                .password(ENCODED_PASSWORD)
+                .role(Role.DOCENTE)
+                .enabled(true)
+                .failedAttempts(3)
+                .build();
+
+        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches(loginRequest.getPassword(), existingUser.getPassword())).thenReturn(false);
+
+        assertThrows(InvalidCredentialsException.class, () -> authService.login(loginRequest));
+
+        verify(userRepository).save(argThat(u -> u.getLockedUntil() != null));
+    }
+
+    @Test
+    void loginWhenSuccessfulAfterPreviousFailuresShouldResetAttempts() {
+        User existingUser = User.builder()
+                .email(loginRequest.getEmail())
+                .password(ENCODED_PASSWORD)
+                .role(Role.DOCENTE)
+                .enabled(true)
+                .failedAttempts(2)
+                .build();
+
+        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches(loginRequest.getPassword(), existingUser.getPassword())).thenReturn(true);
+        jwtService.setToken("token-reset-attempts");
+
+        AuthResponse response = authService.login(loginRequest);
+
+        assertEquals("token-reset-attempts", response.getToken());
+        verify(userRepository).save(argThat(u -> u.getFailedAttempts() == 0 && u.getLockedUntil() == null));
+    }
+
+    @Test
+    void registerWhenRecoveryEmailSameAsMainEmailShouldThrowIllegalArgumentException() {
+        RegisterRequest requestSameEmail = RegisterRequest.builder()
+                .nombre("Juan")
+                .apellido("Perez")
+                .username("juanperez")
+                .email("mismo@ejemplo.com")
+                .recoveryEmail("mismo@ejemplo.com")
+                .password("password123")
+                .build();
+
+        when(userRepository.existsByEmail(requestSameEmail.getEmail())).thenReturn(false);
+        when(userRepository.existsByDisplayUsername(requestSameEmail.getUsername())).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> authService.register(requestSameEmail));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
     private static class StubJwtService extends JwtService {
         private String token;
+        private Date expiration = new Date(System.currentTimeMillis() + 3600_000);
 
         StubJwtService(String token) {
             this.token = token;
@@ -396,9 +512,18 @@ class AuthServiceTest {
             this.token = token;
         }
 
+        void setExpiration(Date expiration) {
+            this.expiration = expiration;
+        }
+
         @Override
         public String generateToken(User user) {
             return token;
+        }
+
+        @Override
+        public Date extractExpiration(String token) {
+            return expiration;
         }
     }
 }

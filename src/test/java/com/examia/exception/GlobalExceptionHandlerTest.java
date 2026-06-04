@@ -35,8 +35,8 @@ class GlobalExceptionHandlerTest {
                 request
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertErrorResponse(response.getBody(), 404, "Not Found", "Usuario no encontrado");
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertErrorResponse(response.getBody(), 401, "Unauthorized", "Credenciales incorrectas");
     }
 
     @Test

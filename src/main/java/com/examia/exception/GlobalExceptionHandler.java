@@ -21,13 +21,16 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String UNAUTHORIZED = "Unauthorized";
+    private static final String BAD_REQUEST = "Bad Request";
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(
             UserNotFoundException ex, HttpServletRequest request) {
 
         ErrorResponse error = ErrorResponse.builder()
                 .status(HttpStatus.UNAUTHORIZED.value())
-                .error("Unauthorized")
+                .error(UNAUTHORIZED)
                 .message("Credenciales incorrectas")
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())
@@ -57,7 +60,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = ErrorResponse.builder()
                 .status(HttpStatus.UNAUTHORIZED.value())
-                .error("Unauthorized")
+                .error(UNAUTHORIZED)
                 .message(ex.getMessage())
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())
@@ -72,7 +75,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
-                .error("Bad Request")
+                .error(BAD_REQUEST)
                 .message(ex.getMessage())
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())
@@ -87,7 +90,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = ErrorResponse.builder()
                 .status(HttpStatus.UNAUTHORIZED.value())
-                .error("Unauthorized")
+                .error(UNAUTHORIZED)
                 .message("Credenciales incorrectas")
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())
@@ -184,7 +187,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
-                .error("Bad Request")
+                .error(BAD_REQUEST)
                 .message(ex.getMessage())
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())

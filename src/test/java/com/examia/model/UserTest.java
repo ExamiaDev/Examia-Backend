@@ -115,7 +115,9 @@ class UserTest {
                 "recovery@ejemplo.com",
                 Role.ALUMNO,
                 createdAt,
-                true
+                true,
+                0,
+                null
         );
 
         assertEquals("id-all", user.getId());

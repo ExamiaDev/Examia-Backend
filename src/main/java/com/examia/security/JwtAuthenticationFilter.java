@@ -1,6 +1,7 @@
 package com.examia.security;
 
 import com.examia.service.JwtService;
+import com.examia.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -43,16 +45,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.info("[JwtFilter] {} {} - Auth header present: {}",
                 request.getMethod(), request.getRequestURI(), authHeader != null);
 
-        // Si no hay header de autorización o no empieza con "Bearer ", continuar sin autenticar
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             log.warn("[JwtFilter] No Bearer token found, continuing without authentication");
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extraer el token (sin el prefijo "Bearer ")
         jwt = authHeader.substring(7);
         log.info("[JwtFilter] Token extracted, length: {}", jwt.length());
+
+        if (tokenBlacklistService.isRevoked(jwt)) {
+            log.warn("[JwtFilter] Rejected revoked token");
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         try {
             userEmail = jwtService.extractEmail(jwt);

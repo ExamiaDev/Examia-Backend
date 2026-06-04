@@ -34,4 +34,5 @@ jobs:
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew clean build jacocoTestReport sonar --info
+          SONAR_HOST_URL: https://sonarcloud.io
+        run: ./gradlew clean build jacocoTestReport sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }} --info

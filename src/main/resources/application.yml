@@ -1,26 +1,24 @@
 spring:
   application:
     name: examia-backend
-
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017/examia}
       auto-index-creation: false
-
-  # Mail configuration (Gmail SMTP)
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
+    port: ${MAIL_PORT:465}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
           auth: true
+          ssl:
+            enable: ${MAIL_SSL_ENABLE:true}
           starttls:
-            enable: true
-
-  # Jackson configuration
+            enable: ${MAIL_STARTTLS_ENABLE:false}
+            required: false
   jackson:
     default-property-inclusion: non_null
 

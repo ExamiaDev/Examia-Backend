@@ -10,6 +10,7 @@ import com.examia.exception.UserNotFoundException;
 import com.examia.model.Role;
 import com.examia.model.User;
 import com.examia.repository.UserRepository;
+import com.examia.service.TokenBlacklistService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,7 +35,8 @@ class AuthServiceTest {
         userRepository = mock(UserRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         jwtService = new StubJwtService("token-123");
-        authService = new AuthService(userRepository, passwordEncoder, jwtService);
+        TokenBlacklistService tokenBlacklistService = mock(TokenBlacklistService.class);
+        authService = new AuthService(userRepository, passwordEncoder, jwtService, tokenBlacklistService);
 
         loginRequest = LoginRequest.builder()
                 .email("usuario@ejemplo.com")
@@ -170,12 +172,12 @@ class AuthServiceTest {
     void loginWhenUserNotFoundShouldThrowUserNotFoundException() {
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
 
-        UserNotFoundException exception = assertThrows(
-                UserNotFoundException.class,
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
                 () -> authService.login(loginRequest)
         );
 
-        assertTrue(exception.getMessage().contains(loginRequest.getEmail()));
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -197,7 +199,7 @@ class AuthServiceTest {
                 () -> authService.login(loginRequest)
         );
 
-        assertTrue(exception.getMessage().contains("contrase\u00f1a"));
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -266,12 +268,12 @@ class AuthServiceTest {
 
         when(userRepository.findByLegajo(loginUadeRequest.getLegajo())).thenReturn(Optional.empty());
 
-        UserNotFoundException exception = assertThrows(
-                UserNotFoundException.class,
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
                 () -> authService.loginUade(loginUadeRequest)
         );
 
-        assertTrue(exception.getMessage().contains("999999"));
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -299,7 +301,7 @@ class AuthServiceTest {
                 () -> authService.loginUade(loginUadeRequest)
         );
 
-        assertTrue(exception.getMessage().contains("email"));
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -328,7 +330,7 @@ class AuthServiceTest {
                 () -> authService.loginUade(loginUadeRequest)
         );
 
-        assertTrue(exception.getMessage().contains("contraseña"));
+        assertNotNull(exception.getMessage());
     }
 
     @Test

@@ -6,22 +6,18 @@ spring:
       uri: ${MONGODB_URI:mongodb://localhost:27017/examia}
       auto-index-creation: false
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:465}
+    host: ${MAIL_HOST:smtp-relay.brevo.com}
+    port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
           auth: true
-          ssl:
-            enable: ${MAIL_SSL_ENABLE:true}
           starttls:
-            enable: ${MAIL_STARTTLS_ENABLE:false}
-            required: false
+            enable: true
   jackson:
     default-property-inclusion: non_null
-
   # Swagger / OpenAPI
   springdoc:
     swagger-ui:
@@ -41,8 +37,6 @@ server:
 
 # JWT Configuration
 jwt:
-  # El secret debe ser una cadena Base64 de al menos 256 bits (32 bytes)
-  # Para producción, configurar la variable de entorno JWT_SECRET con un valor seguro
   secret: ${JWT_SECRET:ZXhhbWlhLXNlY3JldC1rZXktZGV2ZWxvcG1lbnQtb25seS1jaGFuZ2UtaW4tcHJvZHVjdGlvbi1taW4tMjU2LWJpdHM=}
   expiration: ${JWT_EXPIRATION:86400000}  # 24 hours in milliseconds
 
@@ -57,13 +51,13 @@ management:
       show-details: always
   health:
     mail:
-      enabled: false  # Disable mail health check to prevent timeout on Render
+      enabled: false
+
+mail:
+  from: ${MAIL_FROM:}
 
 # Keep-alive configuration for Render free tier
-# Renders free instances go to sleep after 15 minutes of inactivity
 keep-alive:
-  enabled: ${KEEP_ALIVE_ENABLED:false}  # Enable in production on Render
-  url: ${KEEP_ALIVE_URL:}  # Set to your Render URL, e.g., https://examia-backend.onrender.com
-  interval: ${KEEP_ALIVE_INTERVAL:840000}  # 14 minutes in milliseconds (less than Render's 15 min timeout)
-
-
+  enabled: ${KEEP_ALIVE_ENABLED:false}
+  url: ${KEEP_ALIVE_URL:}
+  interval: ${KEEP_ALIVE_INTERVAL:840000}

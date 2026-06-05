@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,7 +16,7 @@ import java.util.Map;
  */
 @Data
 @Builder
-@NoArgsConstructor
+@NoArgsConstructor(onConstructor_ = {@PersistenceCreator})
 @AllArgsConstructor
 public class Question {
 
@@ -37,7 +39,8 @@ public class Question {
      * Opciones disponibles para preguntas de opción múltiple,
      * selección múltiple, verdadero/falso, etc.
      */
-    private List<String> options;
+    @Builder.Default
+    private List<String> options = new ArrayList<>();
 
     /**
      * Índice(s) de la(s) respuesta(s) correcta(s).
@@ -45,7 +48,8 @@ public class Question {
      * Para MULTIPLE_SELECTION: varios índices
      * Para TRUE_FALSE: 0 = Verdadero, 1 = Falso
      */
-    private List<Integer> correctAnswers;
+    @Builder.Default
+    private List<Integer> correctAnswers = new ArrayList<>();
 
     /**
      * Respuesta correcta para preguntas de tipo texto (SHORT_ANSWER, FILL_IN_THE_BLANK)
@@ -61,17 +65,20 @@ public class Question {
     /**
      * Encabezados de columnas para preguntas tipo MATRIX (tabla de referencia del docente).
      */
-    private List<String> matrixColumnHeaders;
+    @Builder.Default
+    private List<String> matrixColumnHeaders = new ArrayList<>();
 
     /**
      * Filas de la tabla MATRIX; cada fila tiene una celda por columna.
      */
-    private List<List<String>> matrixRows;
+    @Builder.Default
+    private List<ArrayList<String>> matrixRows = new ArrayList<>();
 
     /**
      * Orden correcto para preguntas de tipo ORDERING
      */
-    private List<String> correctOrder;
+    @Builder.Default
+    private List<String> correctOrder = new ArrayList<>();
 
     /**
      * Definición del árbol para preguntas de tipo DECISION_TREE.

@@ -8,7 +8,9 @@ import com.examia.model.Question;
 import com.examia.model.QuestionType;
 import com.examia.model.Role;
 import com.examia.model.User;
+import com.examia.model.SubmissionStatus;
 import com.examia.repository.ExamRepository;
+import com.examia.repository.SubmissionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,7 @@ public class ExamService {
 
     private static final String EXAM_NOT_FOUND_MESSAGE = "No se encontró el examen con ID: ";
     private final ExamRepository examRepository;
+    private final SubmissionRepository submissionRepository;
 
     /**
      * Crea un nuevo examen.
@@ -434,6 +437,8 @@ public class ExamService {
     }
 
     private ExamSummaryResponse buildExamSummaryResponse(Exam exam) {
+        long pendingCorrectionsCount = submissionRepository.countByExamIdAndStatusAndActiveTrue(
+                exam.getId(), SubmissionStatus.SUBMITTED);
         return ExamSummaryResponse.builder()
                 .id(exam.getId())
                 .title(exam.getTitle())
@@ -449,6 +454,7 @@ public class ExamService {
                 .scheduledEndTime(exam.getScheduledEndTime())
                 .shift(exam.getShift())
                 .published(exam.isPublished())
+                .pendingCorrectionsCount(pendingCorrectionsCount)
                 .createdAt(exam.getCreatedAt())
                 .updatedAt(exam.getUpdatedAt())
                 .build();

@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,7 +42,7 @@ class ExamServiceTest {
     @InjectMocks
     private ExamService examService;
 
-    private static final LocalDateTime FIXED_NOW = LocalDateTime.of(2024, 1, 1, 12, 0, 0);
+    private static final LocalDateTime FIXED_NOW = LocalDateTime.of(2024, Month.JANUARY, 1, 12, 0, 0);
 
     private User professor;
     private User student;

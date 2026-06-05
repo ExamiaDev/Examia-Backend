@@ -8,7 +8,6 @@ import com.examia.model.Role;
 import com.examia.model.User;
 import com.examia.repository.PasswordResetTokenRepository;
 import com.examia.repository.UserRepository;
-import com.examia.service.AsyncMailSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,8 +44,8 @@ class PasswordResetServiceTest {
     @InjectMocks
     private PasswordResetService passwordResetService;
 
-    private static final LocalDateTime VALID_EXPIRY  = LocalDateTime.of(2099, 12, 31, 23, 59, 59);
-    private static final LocalDateTime EXPIRED_EXPIRY = LocalDateTime.of(2000, 1, 1,  0,  0,  0);
+    private static final LocalDateTime VALID_EXPIRY   = LocalDateTime.of(2099, Month.DECEMBER, 31, 23, 59, 59);
+    private static final LocalDateTime EXPIRED_EXPIRY = LocalDateTime.of(2000, Month.JANUARY,   1,  0,  0,  0);
 
     private User testUser;
 

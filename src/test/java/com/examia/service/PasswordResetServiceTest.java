@@ -8,6 +8,7 @@ import com.examia.model.Role;
 import com.examia.model.User;
 import com.examia.repository.PasswordResetTokenRepository;
 import com.examia.repository.UserRepository;
+import com.examia.service.AsyncMailSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,10 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -41,7 +39,7 @@ class PasswordResetServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private JavaMailSender mailSender;
+    private AsyncMailSender asyncMailSender;
 
     @InjectMocks
     private PasswordResetService passwordResetService;
@@ -50,8 +48,6 @@ class PasswordResetServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(passwordResetService, "mailFrom", "test@examia.com");
-
         testUser = User.builder()
                 .id("123")
                 .email("usuario@ejemplo.com")
@@ -71,7 +67,7 @@ class PasswordResetServiceTest {
         when(userRepository.findByEmail("usuario@ejemplo.com")).thenReturn(Optional.of(testUser));
         doNothing().when(tokenRepository).deleteByEmail(anyString());
         when(tokenRepository.save(any(PasswordResetToken.class))).thenAnswer(i -> i.getArgument(0));
-        doNothing().when(mailSender).send(any(SimpleMailMessage.class));
+        doNothing().when(asyncMailSender).send(anyString(), anyString(), anyString());
 
         ForgotPasswordResponse response = passwordResetService.sendResetCode("usuario@ejemplo.com");
 
@@ -82,7 +78,7 @@ class PasswordResetServiceTest {
 
         verify(tokenRepository).deleteByEmail("usuario@ejemplo.com");
         verify(tokenRepository).save(any(PasswordResetToken.class));
-        verify(mailSender).send(any(SimpleMailMessage.class));
+        verify(asyncMailSender).send(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -98,7 +94,7 @@ class PasswordResetServiceTest {
         when(userRepository.findByEmail("usuario@ejemplo.com")).thenReturn(Optional.of(userWithoutRecovery));
         doNothing().when(tokenRepository).deleteByEmail(anyString());
         when(tokenRepository.save(any(PasswordResetToken.class))).thenAnswer(i -> i.getArgument(0));
-        doNothing().when(mailSender).send(any(SimpleMailMessage.class));
+        doNothing().when(asyncMailSender).send(anyString(), anyString(), anyString());
 
         ForgotPasswordResponse response = passwordResetService.sendResetCode("usuario@ejemplo.com");
 
@@ -117,7 +113,7 @@ class PasswordResetServiceTest {
 
         assertTrue(exception.getMessage().contains("noexiste@ejemplo.com"));
         verify(tokenRepository, never()).save(any());
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        verify(asyncMailSender, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -127,7 +123,7 @@ class PasswordResetServiceTest {
 
         ArgumentCaptor<PasswordResetToken> tokenCaptor = ArgumentCaptor.forClass(PasswordResetToken.class);
         when(tokenRepository.save(tokenCaptor.capture())).thenAnswer(i -> i.getArgument(0));
-        doNothing().when(mailSender).send(any(SimpleMailMessage.class));
+        doNothing().when(asyncMailSender).send(anyString(), anyString(), anyString());
 
         passwordResetService.sendResetCode("usuario@ejemplo.com");
 
@@ -364,7 +360,7 @@ class PasswordResetServiceTest {
         when(userRepository.findByEmail("ab@ejemplo.com")).thenReturn(Optional.of(userWithShortEmail));
         doNothing().when(tokenRepository).deleteByEmail(anyString());
         when(tokenRepository.save(any(PasswordResetToken.class))).thenAnswer(i -> i.getArgument(0));
-        doNothing().when(mailSender).send(any(SimpleMailMessage.class));
+        doNothing().when(asyncMailSender).send(anyString(), anyString(), anyString());
 
         ForgotPasswordResponse response = passwordResetService.sendResetCode("ab@ejemplo.com");
 

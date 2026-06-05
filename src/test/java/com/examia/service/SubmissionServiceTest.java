@@ -30,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -176,12 +177,20 @@ class SubmissionServiceTest {
         User professor = User.builder().id("prof-123").role(Role.DOCENTE).build();
 
         DecisionTreeDefinition profTree = DecisionTreeDefinition.builder()
-                .rootId("n1")
-                .nodes(Map.of("n1", DecisionTreeNode.builder().text("Guía profe").branches(List.of()).build()))
+                .nodes(List.of(DecisionTreeNode.builder()
+                        .id("n1")
+                        .type("decision")
+                        .position(Map.of("x", 250.0, "y", 50.0))
+                        .data(Map.of("label", "Guía profe"))
+                        .build()))
                 .build();
         DecisionTreeDefinition studentTree = DecisionTreeDefinition.builder()
-                .rootId("n1")
-                .nodes(Map.of("n1", DecisionTreeNode.builder().text("Árbol alumno").branches(List.of()).build()))
+                .nodes(List.of(DecisionTreeNode.builder()
+                        .id("n1")
+                        .type("decision")
+                        .position(Map.of("x", 250.0, "y", 50.0))
+                        .data(Map.of("label", "Árbol alumno"))
+                        .build()))
                 .build();
 
         Question treeQuestion = Question.builder()
@@ -199,7 +208,7 @@ class SubmissionServiceTest {
                 .text("Tabla")
                 .order(1)
                 .matrixColumnHeaders(List.of("A", "B"))
-                .matrixRows(List.of(List.of("1", "2")))
+                .matrixRows(new ArrayList<>(List.of(new ArrayList<>(List.of("1", "2")))))
                 .points(5.0)
                 .build();
 
@@ -226,7 +235,7 @@ class SubmissionServiceTest {
                         StudentAnswer.builder()
                                 .questionId("q-matrix")
                                 .matrixColumnHeaders(List.of("X", "Y"))
-                                .matrixRows(List.of(List.of("a", "b")))
+                                .matrixRows(new ArrayList<>(List.of(new ArrayList<>(List.of("a", "b")))))
                                 .build()
                 ))
                 .build();
@@ -240,8 +249,8 @@ class SubmissionServiceTest {
         assertEquals(2, response.getAnswers().size());
 
         var treeAnswer = response.getAnswers().get(0);
-        assertEquals("Guía profe", treeAnswer.getDecisionTree().getNodes().get("n1").getText());
-        assertEquals("Árbol alumno", treeAnswer.getStudentDecisionTree().getNodes().get("n1").getText());
+        assertEquals("Guía profe", treeAnswer.getDecisionTree().getNodes().get(0).getData().get("label"));
+        assertEquals("Árbol alumno", treeAnswer.getStudentDecisionTree().getNodes().get(0).getData().get("label"));
 
         var matrixAnswer = response.getAnswers().get(1);
         assertEquals(List.of("A", "B"), matrixAnswer.getMatrixColumnHeaders());
@@ -359,8 +368,12 @@ class SubmissionServiceTest {
     @Test
     void submitExam_persistsDecisionTreeAndMatrixFields() {
         DecisionTreeDefinition tree = DecisionTreeDefinition.builder()
-                .rootId("n1")
-                .nodes(Map.of("n1", DecisionTreeNode.builder().text("Alumno").branches(List.of()).build()))
+                .nodes(List.of(DecisionTreeNode.builder()
+                        .id("n1")
+                        .type("decision")
+                        .position(Map.of("x", 250.0, "y", 50.0))
+                        .data(Map.of("label", "Alumno"))
+                        .build()))
                 .build();
 
         when(examRepository.findByIdAndActiveTrue(exam.getId())).thenReturn(Optional.of(exam));
@@ -378,7 +391,7 @@ class SubmissionServiceTest {
                         StudentAnswerRequest.builder()
                                 .questionId("q-matrix")
                                 .matrixColumnHeaders(List.of("C1", "C2"))
-                                .matrixRows(List.of(List.of("a", "b")))
+                                .matrixRows(new ArrayList<>(List.of(new ArrayList<>(List.of("a", "b")))))
                                 .build()
                 ))
                 .build();
@@ -388,7 +401,7 @@ class SubmissionServiceTest {
         ArgumentCaptor<Submission> captor = ArgumentCaptor.forClass(Submission.class);
         verify(submissionRepository).save(captor.capture());
         StudentAnswer treeAnswer = captor.getValue().getAnswers().get(0);
-        assertEquals("Alumno", treeAnswer.getDecisionTree().getNodes().get("n1").getText());
+        assertEquals("Alumno", treeAnswer.getDecisionTree().getNodes().get(0).getData().get("label"));
         StudentAnswer matrixAnswer = captor.getValue().getAnswers().get(1);
         assertEquals(List.of("C1", "C2"), matrixAnswer.getMatrixColumnHeaders());
     }

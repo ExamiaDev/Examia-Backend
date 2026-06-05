@@ -11,6 +11,7 @@ import com.examia.model.QuestionType;
 import com.examia.model.Role;
 import com.examia.model.User;
 import com.examia.repository.ExamRepository;
+import com.examia.repository.SubmissionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +34,9 @@ class ExamServiceTest {
 
     @Mock
     private ExamRepository examRepository;
+
+    @Mock
+    private SubmissionRepository submissionRepository;
 
     @InjectMocks
     private ExamService examService;
@@ -378,8 +382,12 @@ class ExamServiceTest {
     @Test
     void getExam_asStudentSanitizesDecisionTreeAndMatrix() {
         DecisionTreeDefinition tree = DecisionTreeDefinition.builder()
-                .rootId("n1")
-                .nodes(Map.of("n1", DecisionTreeNode.builder().text("secreto").branches(List.of()).build()))
+                .nodes(List.of(DecisionTreeNode.builder()
+                        .id("n1")
+                        .type("decision")
+                        .position(Map.of("x", 250.0, "y", 50.0))
+                        .data(Map.of("label", "secreto"))
+                        .build()))
                 .build();
         Question treeQ = Question.builder()
                 .id("q-tree")
@@ -394,7 +402,7 @@ class ExamServiceTest {
                 .type(QuestionType.MATRIX)
                 .text("Tabla")
                 .matrixColumnHeaders(List.of("H1"))
-                .matrixRows(List.of(List.of("v")))
+                .matrixRows(new ArrayList<>(List.of(new ArrayList<>(List.of("v")))))
                 .matchingPairs(Map.of("k", "v"))
                 .points(5.0)
                 .build();
@@ -449,8 +457,12 @@ class ExamServiceTest {
                 .type(QuestionType.DECISION_TREE)
                 .text("Árbol")
                 .decisionTree(DecisionTreeDefinition.builder()
-                        .rootId("n1")
-                        .nodes(Map.of("n1", DecisionTreeNode.builder().text("root").branches(List.of()).build()))
+                        .nodes(List.of(DecisionTreeNode.builder()
+                                .id("n1")
+                                .type("decision")
+                                .position(Map.of("x", 250.0, "y", 50.0))
+                                .data(Map.of("label", "root"))
+                                .build()))
                         .build())
                 .points(4.0)
                 .build();
@@ -458,7 +470,7 @@ class ExamServiceTest {
                 .type(QuestionType.MATRIX)
                 .text("Tabla")
                 .matrixColumnHeaders(List.of("A", "B"))
-                .matrixRows(List.of(List.of("1", "2")))
+                .matrixRows(new ArrayList<>(List.of(new ArrayList<>(List.of("1", "2")))))
                 .points(6.0)
                 .build();
         createExamRequest.setQuestions(List.of(treeReq, matrixReq));

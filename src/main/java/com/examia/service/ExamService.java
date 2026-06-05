@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -61,8 +62,8 @@ public class ExamService {
                 .maxAttempts(request.getMaxAttempts())
                 .shift(request.getShift())
                 .active(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneId.of("UTC")))
+                .updatedAt(LocalDateTime.now(ZoneId.of("UTC")))
                 .build();
 
         Exam savedExam = examRepository.save(exam);
@@ -224,7 +225,7 @@ public class ExamService {
             exam.setShift(request.getShift());
         }
 
-        exam.setUpdatedAt(LocalDateTime.now());
+        exam.setUpdatedAt(LocalDateTime.now(ZoneId.of("UTC")));
 
         Exam updatedExam = examRepository.save(exam);
         return buildExamResponse(updatedExam, "Examen actualizado exitosamente");
@@ -249,8 +250,8 @@ public class ExamService {
         }
 
         exam.setActive(false);
-        exam.setDeletedAt(LocalDateTime.now());
-        exam.setUpdatedAt(LocalDateTime.now());
+        exam.setDeletedAt(LocalDateTime.now(ZoneId.of("UTC")));
+        exam.setUpdatedAt(LocalDateTime.now(ZoneId.of("UTC")));
         examRepository.save(exam);
     }
 
@@ -275,7 +276,7 @@ public class ExamService {
         }
 
         exam.setPublished(published);
-        exam.setUpdatedAt(LocalDateTime.now());
+        exam.setUpdatedAt(LocalDateTime.now(ZoneId.of("UTC")));
 
         Exam updatedExam = examRepository.save(exam);
         String message = published ? "Examen publicado exitosamente" : "Examen despublicado exitosamente";
@@ -341,8 +342,8 @@ public class ExamService {
                 .maxAttempts(originalExam.getMaxAttempts())
                 .published(false) // Nueva copia no publicada
                 .active(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneId.of("UTC")))
+                .updatedAt(LocalDateTime.now(ZoneId.of("UTC")))
                 .build();
 
         Exam savedExam = examRepository.save(duplicatedExam);

@@ -54,6 +54,8 @@ class SubmissionServiceTest {
     @InjectMocks
     private SubmissionService submissionService;
 
+    private static final LocalDateTime FIXED_NOW = LocalDateTime.of(2024, 1, 1, 12, 0, 0);
+
     private User student;
     private Exam exam;
 
@@ -96,8 +98,8 @@ class SubmissionServiceTest {
                 .questions(List.of(decisionTree, matrix))
                 .published(true)
                 .active(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(FIXED_NOW)
+                .updatedAt(FIXED_NOW)
                 .build();
     }
 
@@ -156,7 +158,7 @@ class SubmissionServiceTest {
                 .examId(exam.getId())
                 .studentId(student.getId())
                 .status(SubmissionStatus.SUBMITTED)
-                .submittedAt(LocalDateTime.now())
+                .submittedAt(FIXED_NOW)
                 .totalScore(10.0)
                 .build();
 
@@ -226,7 +228,7 @@ class SubmissionServiceTest {
                 .examId(treeExam.getId())
                 .studentId(student.getId())
                 .status(SubmissionStatus.SUBMITTED)
-                .submittedAt(LocalDateTime.now())
+                .submittedAt(FIXED_NOW)
                 .answers(List.of(
                         StudentAnswer.builder()
                                 .questionId("q-tree")
@@ -266,7 +268,7 @@ class SubmissionServiceTest {
                 .examId(exam.getId())
                 .studentId(student.getId())
                 .status(SubmissionStatus.SUBMITTED)
-                .submittedAt(LocalDateTime.now())
+                .submittedAt(FIXED_NOW)
                 .answers(List.of(
                         StudentAnswer.builder().questionId("q-tree").orderAnswer(List.of("Inicio", "Validar")).build(),
                         StudentAnswer.builder().questionId("q-matrix").matchingAnswer(Map.of("Java", "Lenguaje")).build()
@@ -293,7 +295,7 @@ class SubmissionServiceTest {
                 .examId(exam.getId())
                 .studentId(student.getId())
                 .status(SubmissionStatus.SUBMITTED)
-                .submittedAt(LocalDateTime.now())
+                .submittedAt(FIXED_NOW)
                 .answers(List.of(StudentAnswer.builder().questionId("q-tree").earnedScore(0.0).build()))
                 .build();
 
@@ -453,7 +455,7 @@ class SubmissionServiceTest {
                 .examId(exam.getId())
                 .studentId("deleted-student")
                 .status(SubmissionStatus.SUBMITTED)
-                .submittedAt(LocalDateTime.now())
+                .submittedAt(FIXED_NOW)
                 .build();
 
         when(examRepository.findByIdAndActiveTrue(exam.getId())).thenReturn(Optional.of(exam));
@@ -504,7 +506,7 @@ class SubmissionServiceTest {
                 .examId(exam.getId())
                 .studentId(student.getId())
                 .status(SubmissionStatus.SUBMITTED)
-                .submittedAt(LocalDateTime.now())
+                .submittedAt(FIXED_NOW)
                 .build();
 
         when(submissionRepository.findByStudentIdAndActiveTrue(student.getId())).thenReturn(List.of(submission));
@@ -524,7 +526,7 @@ class SubmissionServiceTest {
                 .examId(exam.getId())
                 .studentId(student.getId())
                 .status(SubmissionStatus.SUBMITTED)
-                .submittedAt(LocalDateTime.now())
+                .submittedAt(FIXED_NOW)
                 .answers(List.of(StudentAnswer.builder().questionId("q-tree").orderAnswer(List.of("Inicio", "Validar")).build()))
                 .build();
 

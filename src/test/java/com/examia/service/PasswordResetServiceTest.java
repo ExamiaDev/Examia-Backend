@@ -44,6 +44,9 @@ class PasswordResetServiceTest {
     @InjectMocks
     private PasswordResetService passwordResetService;
 
+    private static final LocalDateTime VALID_EXPIRY  = LocalDateTime.of(2099, 12, 31, 23, 59, 59);
+    private static final LocalDateTime EXPIRED_EXPIRY = LocalDateTime.of(2000, 1, 1,  0,  0,  0);
+
     private User testUser;
 
     @BeforeEach
@@ -140,7 +143,7 @@ class PasswordResetServiceTest {
         PasswordResetToken validToken = PasswordResetToken.builder()
                 .email("usuario@ejemplo.com")
                 .code("123456")
-                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .expiresAt(VALID_EXPIRY)
                 .used(false)
                 .build();
 
@@ -168,7 +171,7 @@ class PasswordResetServiceTest {
         PasswordResetToken usedToken = PasswordResetToken.builder()
                 .email("usuario@ejemplo.com")
                 .code("123456")
-                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .expiresAt(VALID_EXPIRY)
                 .used(true)
                 .build();
 
@@ -188,7 +191,7 @@ class PasswordResetServiceTest {
         PasswordResetToken expiredToken = PasswordResetToken.builder()
                 .email("usuario@ejemplo.com")
                 .code("123456")
-                .expiresAt(LocalDateTime.now().minusMinutes(5))
+                .expiresAt(EXPIRED_EXPIRY)
                 .used(false)
                 .build();
 
@@ -208,7 +211,7 @@ class PasswordResetServiceTest {
         PasswordResetToken validToken = PasswordResetToken.builder()
                 .email("usuario@ejemplo.com")
                 .code("123456")
-                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .expiresAt(VALID_EXPIRY)
                 .used(false)
                 .build();
 
@@ -230,7 +233,7 @@ class PasswordResetServiceTest {
         PasswordResetToken validToken = PasswordResetToken.builder()
                 .email("usuario@ejemplo.com")
                 .code("123456")
-                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .expiresAt(VALID_EXPIRY)
                 .used(false)
                 .build();
 
@@ -269,7 +272,7 @@ class PasswordResetServiceTest {
         PasswordResetToken usedToken = PasswordResetToken.builder()
                 .email("usuario@ejemplo.com")
                 .code("123456")
-                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .expiresAt(VALID_EXPIRY)
                 .used(true)
                 .build();
 
@@ -289,7 +292,7 @@ class PasswordResetServiceTest {
         PasswordResetToken expiredToken = PasswordResetToken.builder()
                 .email("usuario@ejemplo.com")
                 .code("123456")
-                .expiresAt(LocalDateTime.now().minusMinutes(5))
+                .expiresAt(EXPIRED_EXPIRY)
                 .used(false)
                 .build();
 
@@ -309,7 +312,7 @@ class PasswordResetServiceTest {
         PasswordResetToken validToken = PasswordResetToken.builder()
                 .email("usuario@ejemplo.com")
                 .code("123456")
-                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .expiresAt(VALID_EXPIRY)
                 .used(false)
                 .build();
 
@@ -329,7 +332,7 @@ class PasswordResetServiceTest {
         PasswordResetToken validToken = PasswordResetToken.builder()
                 .email("usuario@ejemplo.com")
                 .code("123456")
-                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .expiresAt(VALID_EXPIRY)
                 .used(false)
                 .build();
 

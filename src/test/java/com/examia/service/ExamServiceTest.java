@@ -41,6 +41,8 @@ class ExamServiceTest {
     @InjectMocks
     private ExamService examService;
 
+    private static final LocalDateTime FIXED_NOW = LocalDateTime.of(2024, 1, 1, 12, 0, 0);
+
     private User professor;
     private User student;
     private Exam exam;
@@ -90,8 +92,8 @@ class ExamServiceTest {
                 .passingScore(60.0)
                 .published(false)
                 .active(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(FIXED_NOW)
+                .updatedAt(FIXED_NOW)
                 .build();
 
         QuestionRequest questionRequest = QuestionRequest.builder()

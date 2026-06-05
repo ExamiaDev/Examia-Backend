@@ -1,7 +1,8 @@
 package com.examia.dto;
 
-import com.examia.model.QuestionType;
 import com.examia.model.DecisionTreeDefinition;
+
+import com.examia.model.QuestionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -10,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -67,7 +69,7 @@ public class QuestionRequest {
     /**
      * Filas de la tabla MATRIX
      */
-    private List<List<String>> matrixRows;
+    private List<ArrayList<String>> matrixRows;
 
     /**
      * Orden correcto para preguntas de tipo ORDERING

@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.examia.model.DecisionTreeDefinition;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -37,5 +39,5 @@ public class StudentAnswerRequest {
     /** Para MATRIX: tabla creada por el alumno */
     private List<String> matrixColumnHeaders;
 
-    private List<List<String>> matrixRows;
+    private List<ArrayList<String>> matrixRows;
 }

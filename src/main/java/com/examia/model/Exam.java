@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -57,7 +58,8 @@ public class Exam {
     /**
      * Lista de preguntas del examen
      */
-    private List<Question> questions;
+    @Builder.Default
+    private List<Question> questions = new ArrayList<>();
 
     /**
      * Duración del examen en minutos (opcional)

@@ -8,14 +8,12 @@ import com.examia.model.User;
 import com.examia.repository.PasswordResetTokenRepository;
 import com.examia.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -26,10 +24,7 @@ public class PasswordResetService {
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JavaMailSender mailSender;
-
-    @Value("${spring.mail.username}")
-    private String mailFrom;
+    private final AsyncMailSender asyncMailSender;
 
     private static final int CODE_LENGTH = 6;
     private static final int EXPIRY_MINUTES = 15;
@@ -48,7 +43,7 @@ public class PasswordResetService {
         PasswordResetToken token = PasswordResetToken.builder()
                 .email(email)
                 .code(code)
-                .expiresAt(LocalDateTime.now().plusMinutes(EXPIRY_MINUTES))
+                .expiresAt(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(EXPIRY_MINUTES))
                 .used(false)
                 .build();
         tokenRepository.save(token);
@@ -68,7 +63,7 @@ public class PasswordResetService {
         if (token.isUsed()) {
             throw new InvalidResetCodeException("El código ya fue utilizado");
         }
-        if (LocalDateTime.now().isAfter(token.getExpiresAt())) {
+        if (LocalDateTime.now(ZoneId.of("UTC")).isAfter(token.getExpiresAt())) {
             throw new InvalidResetCodeException("El código ha expirado. Solicitá uno nuevo.");
         }
         if (!token.getCode().equals(code)) {
@@ -83,7 +78,7 @@ public class PasswordResetService {
         if (token.isUsed()) {
             throw new InvalidResetCodeException("El código ya fue utilizado");
         }
-        if (LocalDateTime.now().isAfter(token.getExpiresAt())) {
+        if (LocalDateTime.now(ZoneId.of("UTC")).isAfter(token.getExpiresAt())) {
             throw new InvalidResetCodeException("El código ha expirado. Solicitá uno nuevo.");
         }
         if (!token.getCode().equals(code)) {
@@ -116,18 +111,13 @@ public class PasswordResetService {
     }
 
     private void sendEmail(String to, String code) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(mailFrom);
-        message.setTo(to);
-        message.setSubject("Examia - Código de recuperación de contraseña");
-        message.setText(
-                "Hola,\n\n" +
+        String subject = "Examia - Código de recuperación de contraseña";
+        String body = "Hola,\n\n" +
                 "Tu código de verificación para recuperar tu contraseña de Examia es:\n\n" +
                 "  " + code + "\n\n" +
                 "Este código es válido por " + EXPIRY_MINUTES + " minutos.\n\n" +
                 "Si no solicitaste este código, ignorá este mensaje.\n\n" +
-                "— Equipo Examia"
-        );
-        mailSender.send(message);
+                "— Equipo Examia";
+        asyncMailSender.send(to, subject, body);
     }
 }

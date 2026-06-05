@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,7 +16,7 @@ import java.util.Map;
  */
 @Data
 @Builder
-@NoArgsConstructor
+@NoArgsConstructor(onConstructor_ = {@PersistenceCreator})
 @AllArgsConstructor
 public class StudentAnswer {
 
@@ -22,13 +24,15 @@ public class StudentAnswer {
     private String questionId;
 
     /** Opciones seleccionadas (MULTIPLE_CHOICE, MULTIPLE_SELECTION, TRUE_FALSE) */
-    private List<Integer> selectedOptions;
+    @Builder.Default
+    private List<Integer> selectedOptions = new ArrayList<>();
 
     /** Respuesta en texto libre (LONG_ANSWER, SHORT_ANSWER, FILL_IN_THE_BLANK) */
     private String textAnswer;
 
     /** Orden ingresado por el alumno (ORDERING) */
-    private List<String> orderAnswer;
+    @Builder.Default
+    private List<String> orderAnswer = new ArrayList<>();
 
     /** Pares ingresados por el alumno (MATCHING) */
     private Map<String, String> matchingAnswer;
@@ -37,9 +41,11 @@ public class StudentAnswer {
     private DecisionTreeDefinition decisionTree;
 
     /** Tabla armada por el alumno (MATRIX) */
-    private List<String> matrixColumnHeaders;
+    @Builder.Default
+    private List<String> matrixColumnHeaders = new ArrayList<>();
 
-    private List<List<String>> matrixRows;
+    @Builder.Default
+    private List<ArrayList<String>> matrixRows = new ArrayList<>();
 
     /** Puntaje obtenido en esta pregunta (asignado por el docente o auto-corrección) */
     private Double earnedScore;

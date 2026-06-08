@@ -24,4 +24,6 @@ public class SubmissionSummaryResponse {
     private SubmissionStatus status;
     private Double totalScore;
     private Double totalPoints;
+    private int violationCount;
+    private Integer timeTakenSeconds;
 }

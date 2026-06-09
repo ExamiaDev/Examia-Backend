@@ -532,7 +532,7 @@ class SubmissionServiceTest {
                 .build();
 
         when(submissionRepository.findByIdAndActiveTrue("sub-654")).thenReturn(Optional.of(submission));
-        when(examRepository.findByIdAndActiveTrue(exam.getId())).thenReturn(Optional.of(exam));
+        when(examRepository.findById(exam.getId())).thenReturn(Optional.of(exam));
 
         var response = submissionService.getMySubmission("sub-654", student);
 

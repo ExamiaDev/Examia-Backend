@@ -1,0 +1,38 @@
+﻿
+PER-CLASS METHOD missed (and which methods):
+
+CLASS: com/examia/service/ExamService - missed methods: 3
+  - PARTIAL (151 covered, 8 missed): updateExam(Ljava/lang/String;Lcom/examia/dto/UpdateExamRequest;Lcom/examia/model/User;)Lcom/examia/dto/ExamResponse;
+  - PARTIAL (39 covered, 1 missed): sanitizeQuestionsForStudent(Lcom/examia/model/Exam;)V
+  - PARTIAL (66 covered, 4 missed): mapQuestionFromRequest(Lcom/examia/dto/QuestionRequest;)Lcom/examia/model/Question;
+  - PARTIAL (73 covered, 1 missed): buildExamResponse(Lcom/examia/model/Exam;Ljava/lang/String;)Lcom/examia/dto/ExamResponse;
+  - PARTIAL (65 covered, 1 missed): buildExamSummaryResponse(Lcom/examia/model/Exam;)Lcom/examia/dto/ExamSummaryResponse;
+  - PARTIAL (8 covered, 1 missed): lambda$calculateTotalPoints$6(Lcom/examia/model/Question;)D
+  - NEVER COVERED: lambda$duplicateExam$4(Ljava/lang/String;)Lcom/examia/exception/ExamNotFoundException;
+  - NEVER COVERED: lambda$togglePublish$3(Ljava/lang/String;)Lcom/examia/exception/ExamNotFoundException;
+  - NEVER COVERED: lambda$deleteExam$2(Ljava/lang/String;)Lcom/examia/exception/ExamNotFoundException;
+
+CLASS: com/examia/service/SubmissionService - missed methods: 5
+  - PARTIAL (83 covered, 3 missed): submitExam(Ljava/lang/String;Lcom/examia/dto/SubmitExamRequest;Lcom/examia/model/User;)Lcom/examia/dto/SubmissionSummaryResponse;
+  - PARTIAL (67 covered, 3 missed): buildSummary(Lcom/examia/model/Submission;Lcom/examia/model/User;Lcom/examia/model/Exam;)Lcom/examia/dto/SubmissionSummaryResponse;
+  - PARTIAL (205 covered, 7 missed): buildFullResponse(Lcom/examia/model/Submission;Lcom/examia/model/Exam;Lcom/examia/model/User;)Lcom/examia/dto/SubmissionResponse;
+  - NEVER COVERED: lambda$buildFullResponse$11(Lcom/examia/model/StudentAnswer;Lcom/examia/model/StudentAnswer;)Lcom/examia/model/StudentAnswer;
+  - PARTIAL (6 covered, 1 missed): lambda$buildFullResponse$9(Lcom/examia/model/StudentAnswer;)Z
+  - NEVER COVERED: lambda$getSubmissionBelongingToExam$8(Ljava/lang/String;)Lcom/examia/exception/SubmissionNotFoundException;
+  - NEVER COVERED: lambda$getExamOwnedByProfessor$7(Ljava/lang/String;)Lcom/examia/exception/ExamNotFoundException;
+  - NEVER COVERED: lambda$getMySubmission$6(Lcom/examia/model/Submission;)Lcom/examia/exception/ExamNotFoundException;
+  - NEVER COVERED: lambda$getMySubmission$5(Ljava/lang/String;)Lcom/examia/exception/SubmissionNotFoundException;
+
+PER-CLASS BRANCH missed (top offenders):
+
+Class                                         Missed Covered
+-----                                         ------ -------
+com/examia/service/SubmissionService              12      38
+com/examia/service/ExamService                    10      56
+com/examia/service/AuthService                     5      35
+com/examia/security/JwtAuthenticationFilter        3      11
+com/examia/service/mail/BrevoApiEmailProvider      2       6
+com/examia/controller/ExamController               1       3
+com/examia/service/JwtService                      1       3
+
+

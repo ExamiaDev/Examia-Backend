@@ -13,3 +13,12 @@ services:
         sync: false
       - key: JWT_EXPIRATION
         value: 86400000
+      # ===== Mail (Brevo API HTTP — Render bloquea SMTP outbound en free) =====
+      - key: MAIL_PROVIDER
+        value: brevo-api
+      - key: MAIL_FROM
+        sync: false           # email remitente verificado en Brevo
+      - key: MAIL_FROM_NAME
+        value: Examia
+      - key: BREVO_API_KEY
+        sync: false           # API key v3 generada en panel de Brevo

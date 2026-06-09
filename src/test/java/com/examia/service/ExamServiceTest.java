@@ -136,6 +136,7 @@ class ExamServiceTest {
 
         assertNotNull(response);
         assertEquals("Examen de Geografía", response.getTitle());
+        assertNotNull(response.getCreatedAt());
         assertEquals("Examen creado exitosamente", response.getMessage());
         verify(examRepository).save(any(Exam.class));
     }
@@ -355,6 +356,7 @@ class ExamServiceTest {
 
         assertNotNull(response);
         assertEquals("Examen de Geografía (Copia)", response.getTitle());
+        assertNotNull(response.getCreatedAt());
         assertFalse(response.isPublished());
         assertEquals("Examen duplicado exitosamente", response.getMessage());
     }

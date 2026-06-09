@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -53,11 +54,28 @@ public class BrevoApiEmailProvider implements EmailProvider {
                     "mail.provider=brevo-api requiere la propiedad 'mail.from' (env MAIL_FROM) verificada en Brevo."
             );
         }
+
+        // Detectamos errores típicos de configuración que provocan 401 en Brevo:
+        // - copiar/pegar con espacios o saltos invisibles
+        // - usar la "SMTP key" (login SMTP) en lugar de la API key v3
+        String sanitizedKey = apiKey.trim();
+        if (!sanitizedKey.equals(apiKey)) {
+            log.warn("BREVO_API_KEY contenía espacios/saltos al inicio o final. " +
+                    "Se recortaron, pero revisá el valor en Render para evitar problemas futuros.");
+        }
+        if (!sanitizedKey.startsWith("xkeysib-")) {
+            log.warn("BREVO_API_KEY no empieza con 'xkeysib-'. " +
+                    "¿Estás usando la SMTP key en lugar de la API key v3? " +
+                    "Generala en Brevo > Account > SMTP & API > API Keys.");
+        }
+        log.info("Brevo API configurado: from='{}' name='{}' keyLen={} keyPrefix='{}'",
+                mailFrom, mailFromName, sanitizedKey.length(), maskKey(sanitizedKey));
+
         this.mailFrom = mailFrom;
         this.mailFromName = mailFromName;
         this.restClient = restClientBuilder
                 .baseUrl(apiUrl)
-                .defaultHeader("api-key", apiKey)
+                .defaultHeader("api-key", sanitizedKey)
                 .defaultHeader("accept", MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader("content-type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
@@ -78,11 +96,32 @@ public class BrevoApiEmailProvider implements EmailProvider {
                     .retrieve()
                     .toBodilessEntity();
             log.debug("Email Brevo API enviado a {}", to);
+        } catch (HttpStatusCodeException ex) {
+            // Brevo devuelve el motivo del error en el body (p.ej. {"code":"unauthorized","message":"Key not found"}).
+            // RestClient.retrieve() no lo expone en el mensaje, así que lo extraemos manualmente.
+            String responseBody = ex.getResponseBodyAsString();
+            log.error("Falló el envío de email vía Brevo API a {}: {} {} - body: {}",
+                    to, ex.getStatusCode().value(), ex.getStatusText(),
+                    responseBody.isBlank() ? "<vacío>" : responseBody);
+            throw ex;
         } catch (RestClientException ex) {
             log.error("Falló el envío de email vía Brevo API a {}: {}", to, ex.getMessage());
             throw ex;
         }
     }
+
+    /**
+     * Devuelve una versión enmascarada de la API key para loggear sin exponerla.
+     * Ejemplo: "xkeysib-abc...xyz" (sólo los primeros y últimos chars).
+     */
+    private static String maskKey(String key) {
+        if (key == null || key.length() <= 12) {
+            return "***";
+        }
+        return key.substring(0, 11) + "..." + key.substring(key.length() - 3);
+    }
 }
+
+
 
 

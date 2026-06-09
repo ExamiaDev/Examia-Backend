@@ -1,7 +1,7 @@
 package com.examia.dto;
 
 import com.examia.model.DecisionTreeDefinition;
-
+import com.examia.model.ProctoringViolation;
 import com.examia.model.QuestionType;
 import com.examia.model.SubmissionStatus;
 import lombok.AllArgsConstructor;
@@ -38,6 +38,8 @@ public class SubmissionResponse {
     private LocalDateTime gradedAt;
 
     private List<AnswerWithQuestionDto> answers;
+    private List<ProctoringViolation> violations;
+    private Integer timeTakenSeconds;
 
     @Data
     @Builder

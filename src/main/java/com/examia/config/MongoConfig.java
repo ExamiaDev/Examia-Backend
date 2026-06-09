@@ -1,14 +1,39 @@
 package com.examia.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-/**
- * Configuración de MongoDB.
- * Habilita la auditoría para campos como @CreatedDate.
- */
+import java.util.List;
+
 @Configuration
 @EnableMongoAuditing
 public class MongoConfig {
-}
 
+    @Bean
+    public MongoCustomConversions mongoCustomConversions() {
+        return new MongoCustomConversions(List.of(new DecisionTreeReadConverter()));
+    }
+
+    @Bean
+    public MappingMongoConverter mappingMongoConverter(
+            MongoDatabaseFactory databaseFactory,
+            MongoMappingContext context,
+            MongoCustomConversions conversions) {
+        DbRefResolver dbRefResolver = new DefaultDbRefResolver(databaseFactory);
+        MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, context);
+        converter.setCustomConversions(conversions);
+        // Ignora _class en documentos embebidos para evitar
+        // "Failed to instantiate [java.util.List]: Specified class is an interface"
+        // cuando documentos viejos tienen _class: java.util.List guardado.
+        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
+        return converter;
+    }
+}

@@ -57,6 +57,13 @@ public class Submission {
     /** Comentario general del docente */
     private String teacherFeedback;
 
+    /** Infracciones de vigilancia detectadas durante el examen */
+    @Builder.Default
+    private List<ProctoringViolation> violations = new ArrayList<>();
+
+    /** Tiempo que tardó el alumno en completar el examen, en segundos */
+    private Integer timeTakenSeconds;
+
     /** Borrado lógico */
     @Builder.Default
     private boolean active = true;

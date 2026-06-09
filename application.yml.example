@@ -10,6 +10,19 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+  # SMTP — sólo se usa cuando mail.provider=smtp (default en local).
+  mail:
+    host: ${MAIL_HOST:smtp-relay.brevo.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 # Server configuration
 server:
   port: ${PORT:8080}
@@ -37,3 +50,15 @@ keep-alive:
   enabled: ${KEEP_ALIVE_ENABLED:false}  # Enable in production on Render
   url: ${KEEP_ALIVE_URL:}  # Set to your Render URL, e.g., https://examia-backend.onrender.com
   interval: ${KEEP_ALIVE_INTERVAL:840000}  # 14 minutes in milliseconds
+
+# Mail — selecciona el transporte
+#   smtp      -> usa el bloque spring.mail (puerto 587 STARTTLS). Local.
+#   brevo-api -> usa la API HTTP de Brevo (puerto 443). Requerido en Render.
+mail:
+  provider: ${MAIL_PROVIDER:smtp}
+  from: ${MAIL_FROM:}                    # email remitente verificado en Brevo
+  from-name: ${MAIL_FROM_NAME:Examia}
+  brevo:
+    api-url: ${BREVO_API_URL:https://api.brevo.com/v3/smtp/email}
+    api-key: ${BREVO_API_KEY:}           # sólo necesaria con provider=brevo-api
+

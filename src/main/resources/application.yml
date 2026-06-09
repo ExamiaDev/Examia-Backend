@@ -54,7 +54,14 @@ management:
       enabled: false
 
 mail:
+  # Selecciona el transporte: "smtp" (default, ideal local) o "brevo-api"
+  # (HTTP, necesario en Render porque bloquea SMTP outbound en plan Free).
+  provider: ${MAIL_PROVIDER:smtp}
   from: ${MAIL_FROM:}
+  from-name: ${MAIL_FROM_NAME:Examia}
+  brevo:
+    api-url: ${BREVO_API_URL:https://api.brevo.com/v3/smtp/email}
+    api-key: ${BREVO_API_KEY:}
 
 # Keep-alive configuration for Render free tier
 keep-alive:

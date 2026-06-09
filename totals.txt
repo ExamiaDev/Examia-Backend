@@ -1,0 +1,11 @@
+﻿
+type        missed covered
+----        ------ -------
+INSTRUCTION 86     3150   
+BRANCH      34     176    
+LINE        5      797    
+COMPLEXITY  42     198    
+METHOD      8      127    
+CLASS       0      16     
+
+

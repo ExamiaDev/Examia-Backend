@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,7 +44,8 @@ public class Submission {
     private String subjectId;
 
     /** Respuestas del alumno, una por pregunta */
-    private List<StudentAnswer> answers;
+    @Builder.Default
+    private List<StudentAnswer> answers = new ArrayList<>();
 
     /** Estado actual de la entrega */
     @Builder.Default
@@ -54,6 +56,13 @@ public class Submission {
 
     /** Comentario general del docente */
     private String teacherFeedback;
+
+    /** Infracciones de vigilancia detectadas durante el examen */
+    @Builder.Default
+    private List<ProctoringViolation> violations = new ArrayList<>();
+
+    /** Tiempo que tardó el alumno en completar el examen, en segundos */
+    private Integer timeTakenSeconds;
 
     /** Borrado lógico */
     @Builder.Default

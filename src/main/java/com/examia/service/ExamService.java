@@ -8,11 +8,14 @@ import com.examia.model.Question;
 import com.examia.model.QuestionType;
 import com.examia.model.Role;
 import com.examia.model.User;
+import com.examia.model.SubmissionStatus;
 import com.examia.repository.ExamRepository;
+import com.examia.repository.SubmissionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +28,7 @@ public class ExamService {
 
     private static final String EXAM_NOT_FOUND_MESSAGE = "No se encontró el examen con ID: ";
     private final ExamRepository examRepository;
+    private final SubmissionRepository submissionRepository;
 
     /**
      * Crea un nuevo examen.
@@ -58,8 +62,8 @@ public class ExamService {
                 .maxAttempts(request.getMaxAttempts())
                 .shift(request.getShift())
                 .active(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneId.of("UTC")))
+                .updatedAt(LocalDateTime.now(ZoneId.of("UTC")))
                 .build();
 
         Exam savedExam = examRepository.save(exam);
@@ -221,7 +225,7 @@ public class ExamService {
             exam.setShift(request.getShift());
         }
 
-        exam.setUpdatedAt(LocalDateTime.now());
+        exam.setUpdatedAt(LocalDateTime.now(ZoneId.of("UTC")));
 
         Exam updatedExam = examRepository.save(exam);
         return buildExamResponse(updatedExam, "Examen actualizado exitosamente");
@@ -246,8 +250,8 @@ public class ExamService {
         }
 
         exam.setActive(false);
-        exam.setDeletedAt(LocalDateTime.now());
-        exam.setUpdatedAt(LocalDateTime.now());
+        exam.setDeletedAt(LocalDateTime.now(ZoneId.of("UTC")));
+        exam.setUpdatedAt(LocalDateTime.now(ZoneId.of("UTC")));
         examRepository.save(exam);
     }
 
@@ -272,7 +276,7 @@ public class ExamService {
         }
 
         exam.setPublished(published);
-        exam.setUpdatedAt(LocalDateTime.now());
+        exam.setUpdatedAt(LocalDateTime.now(ZoneId.of("UTC")));
 
         Exam updatedExam = examRepository.save(exam);
         String message = published ? "Examen publicado exitosamente" : "Examen despublicado exitosamente";
@@ -338,8 +342,8 @@ public class ExamService {
                 .maxAttempts(originalExam.getMaxAttempts())
                 .published(false) // Nueva copia no publicada
                 .active(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneId.of("UTC")))
+                .updatedAt(LocalDateTime.now(ZoneId.of("UTC")))
                 .build();
 
         Exam savedExam = examRepository.save(duplicatedExam);
@@ -434,6 +438,8 @@ public class ExamService {
     }
 
     private ExamSummaryResponse buildExamSummaryResponse(Exam exam) {
+        long pendingCorrectionsCount = submissionRepository.countByExamIdAndStatusAndActiveTrue(
+                exam.getId(), SubmissionStatus.SUBMITTED);
         return ExamSummaryResponse.builder()
                 .id(exam.getId())
                 .title(exam.getTitle())
@@ -449,6 +455,7 @@ public class ExamService {
                 .scheduledEndTime(exam.getScheduledEndTime())
                 .shift(exam.getShift())
                 .published(exam.isPublished())
+                .pendingCorrectionsCount(pendingCorrectionsCount)
                 .createdAt(exam.getCreatedAt())
                 .updatedAt(exam.getUpdatedAt())
                 .build();

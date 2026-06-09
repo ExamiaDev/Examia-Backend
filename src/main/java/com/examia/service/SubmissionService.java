@@ -5,6 +5,8 @@ import com.examia.exception.ExamNotFoundException;
 import com.examia.exception.SubmissionNotFoundException;
 import com.examia.exception.UnauthorizedAccessException;
 import com.examia.model.*;
+
+import java.util.ArrayList;
 import com.examia.repository.ExamRepository;
 import com.examia.repository.SubmissionRepository;
 import com.examia.repository.UserRepository;
@@ -41,7 +43,8 @@ public class SubmissionService {
                     User student = userRepository.findById(sub.getStudentId()).orElse(null);
                     return buildSummary(sub, student, exam);
                 })
-                .sorted(Comparator.comparing(SubmissionSummaryResponse::getSubmittedAt).reversed())
+                .sorted(Comparator.comparing(SubmissionSummaryResponse::getSubmittedAt,
+                        Comparator.nullsFirst(Comparator.naturalOrder())).reversed())
                 .toList();
     }
 
@@ -118,12 +121,18 @@ public class SubmissionService {
                         .build())
                 .toList();
 
+        List<ProctoringViolation> violations = request.getViolations() != null
+                ? request.getViolations()
+                : new ArrayList<>();
+
         Submission submission = Submission.builder()
                 .examId(examId)
                 .studentId(student.getId())
                 .professorId(exam.getProfessorId())
                 .subjectId(exam.getSubjectId())
                 .answers(answers)
+                .violations(violations)
+                .timeTakenSeconds(request.getTimeTakenSeconds())
                 .status(SubmissionStatus.SUBMITTED)
                 .active(true)
                 .build();
@@ -143,7 +152,8 @@ public class SubmissionService {
                     Exam exam = examRepository.findByIdAndActiveTrue(sub.getExamId()).orElse(null);
                     return buildSummary(sub, student, exam);
                 })
-                .sorted(Comparator.comparing(SubmissionSummaryResponse::getSubmittedAt).reversed())
+                .sorted(Comparator.comparing(SubmissionSummaryResponse::getSubmittedAt,
+                        Comparator.nullsFirst(Comparator.naturalOrder())).reversed())
                 .toList();
     }
 
@@ -158,7 +168,7 @@ public class SubmissionService {
             throw new UnauthorizedAccessException("No tiene permiso para ver esta entrega");
         }
 
-        Exam exam = examRepository.findByIdAndActiveTrue(submission.getExamId())
+        Exam exam = examRepository.findById(submission.getExamId())
                 .orElseThrow(() -> new ExamNotFoundException(EXAM_NOT_FOUND + submission.getExamId()));
 
         return buildFullResponse(submission, exam, student);
@@ -190,6 +200,8 @@ public class SubmissionService {
                 : "Usuario eliminado";
         String legajo = student != null ? student.getLegajo() : null;
 
+        int violationCount = sub.getViolations() != null ? sub.getViolations().size() : 0;
+
         return SubmissionSummaryResponse.builder()
                 .id(sub.getId())
                 .examId(sub.getExamId())
@@ -201,6 +213,8 @@ public class SubmissionService {
                 .status(sub.getStatus())
                 .totalScore(sub.getTotalScore())
                 .totalPoints(exam != null ? exam.getTotalPoints() : null)
+                .violationCount(violationCount)
+                .timeTakenSeconds(sub.getTimeTakenSeconds())
                 .build();
     }
 
@@ -266,6 +280,10 @@ public class SubmissionService {
                     .build();
         }
 
+        List<ProctoringViolation> violations = submission.getViolations() != null
+                ? submission.getViolations()
+                : new ArrayList<>();
+
         return SubmissionResponse.builder()
                 .id(submission.getId())
                 .examId(exam.getId())
@@ -278,6 +296,8 @@ public class SubmissionService {
                 .teacherFeedback(submission.getTeacherFeedback())
                 .gradedAt(submission.getGradedAt())
                 .answers(answers)
+                .violations(violations)
+                .timeTakenSeconds(submission.getTimeTakenSeconds())
                 .build();
     }
 

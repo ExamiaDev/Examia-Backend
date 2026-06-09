@@ -1,7 +1,8 @@
 package com.examia.dto;
 
-import com.examia.model.QuestionType;
 import com.examia.model.DecisionTreeDefinition;
+import com.examia.model.ProctoringViolation;
+import com.examia.model.QuestionType;
 import com.examia.model.SubmissionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +38,8 @@ public class SubmissionResponse {
     private LocalDateTime gradedAt;
 
     private List<AnswerWithQuestionDto> answers;
+    private List<ProctoringViolation> violations;
+    private Integer timeTakenSeconds;
 
     @Data
     @Builder
@@ -68,7 +72,7 @@ public class SubmissionResponse {
         private DecisionTreeDefinition decisionTree;
         private Map<String, String> matchingPairs;
         private List<String> matrixColumnHeaders;
-        private List<List<String>> matrixRows;
+        private List<ArrayList<String>> matrixRows;
 
         // Respuesta del alumno
         private List<Integer> selectedOptions;
@@ -77,7 +81,7 @@ public class SubmissionResponse {
         private Map<String, String> matchingAnswer;
         private DecisionTreeDefinition studentDecisionTree;
         private List<String> studentMatrixColumnHeaders;
-        private List<List<String>> studentMatrixRows;
+        private List<ArrayList<String>> studentMatrixRows;
 
         // Calificación
         private Double earnedScore;

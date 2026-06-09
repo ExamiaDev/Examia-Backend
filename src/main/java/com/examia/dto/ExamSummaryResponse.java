@@ -31,6 +31,7 @@ public class ExamSummaryResponse {
     private LocalDateTime scheduledEndTime;
     private String shift;
     private boolean published;
+    private long pendingCorrectionsCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

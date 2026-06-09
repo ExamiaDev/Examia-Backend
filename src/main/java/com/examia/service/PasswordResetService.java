@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public class PasswordResetService {
         PasswordResetToken token = PasswordResetToken.builder()
                 .email(email)
                 .code(code)
-                .expiresAt(LocalDateTime.now().plusMinutes(EXPIRY_MINUTES))
+                .expiresAt(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(EXPIRY_MINUTES))
                 .used(false)
                 .build();
         tokenRepository.save(token);
@@ -62,7 +63,7 @@ public class PasswordResetService {
         if (token.isUsed()) {
             throw new InvalidResetCodeException("El código ya fue utilizado");
         }
-        if (LocalDateTime.now().isAfter(token.getExpiresAt())) {
+        if (LocalDateTime.now(ZoneId.of("UTC")).isAfter(token.getExpiresAt())) {
             throw new InvalidResetCodeException("El código ha expirado. Solicitá uno nuevo.");
         }
         if (!token.getCode().equals(code)) {
@@ -77,7 +78,7 @@ public class PasswordResetService {
         if (token.isUsed()) {
             throw new InvalidResetCodeException("El código ya fue utilizado");
         }
-        if (LocalDateTime.now().isAfter(token.getExpiresAt())) {
+        if (LocalDateTime.now(ZoneId.of("UTC")).isAfter(token.getExpiresAt())) {
             throw new InvalidResetCodeException("El código ha expirado. Solicitá uno nuevo.");
         }
         if (!token.getCode().equals(code)) {
